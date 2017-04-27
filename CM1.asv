@@ -2,10 +2,10 @@
 clear
 
 %Load file CSV dataset mentah
-DatasetCM1 = csvread('CM1.csv');
+DatasetCM1 = csvread('D:\Kuliah\S2-ITS\Semester_4\Dataset\CSV format\CM1.csv');
 
 %load file CSV dataset (remove duplicate)
-CM1Unique = csvread('CM1Unique.csv');
+CM1Unique = csvread('D:\Kuliah\S2-ITS\Semester_4\Dataset\CSV format\CM1Unique.csv');
 
 for IterasiFiturFold = 1:21                    
     % FOLD1(1:45) (46:89) (90:133) (134:177) (178:221) (222:265) (266:309) (310:353) (354:397) (398:442)
@@ -36,16 +36,15 @@ for i = 1:k
     piFalse(:,i) = 0;
     % Menghitung jumlah training 
     for iterasi = 1 : length(CM1Unique)
-        for iterasi2 = 1 : size(CM1Unique,2)                            
-            if trainIdx(iterasi,i) == 1
-                jumlahTraining(iterasi2,i) = jumlahTraining(iterasi2,i) + 1;
-                if CM1Unique(iterasi,22) == 1
-                    jumlahTrue(iterasi2,i) = jumlahTrue(iterasi2,i) + 1;
-                else
-                    jumlahFalse(iterasi2,i) = jumlahFalse(iterasi2,i) + 1;
-                end
-            end           
-        end
+        for iterasi2 = 1 : 
+        if trainIdx(iterasi,i) == 1
+            jumlahTraining(1,i) = jumlahTraining(1,i) + 1;
+            if CM1Unique(iterasi,22) == 1
+                jumlahTrue(1,i) = jumlahTrue(1,i) + 1;
+            else
+                jumlahFalse(1,i) = jumlahFalse(1,i) + 1;
+            end
+        end        
     end        
     
     piTrue(1,i) = jumlahTrue(1,i)/jumlahTraining(1,i);
