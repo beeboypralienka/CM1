@@ -59,10 +59,10 @@ for iFold = 1:k
     end          
     clear iBarisCM1Unique;
            
-    % ---------------------------------------------------------------------
-    % Menghitung entropy parent di tahap EBD dari setiap fold (menggunakan
-    % fungsi)
-    % ---------------------------------------------------------------------
+    % --------------------------------------------------------
+    % Menghitung entropy parent di tahap EBD dari setiap fold
+    % (menggunakan fungsi "entropyParentEBD")
+    % --------------------------------------------------------
     entropyParent = entropyParentEBD(jmlTrue,jmlFalse,jmlTraining,iFold);
     
     % -------------------------------------------------------------------
@@ -76,7 +76,9 @@ for iFold = 1:k
     % Mengisi data metrik Mtraining dan Mtesting (fitur dan kelas)
     % ------------------------------------------------------------
     for iKolomCell = 1 : size(CM1Unique,2)-1 % Iterasi kolom cell berdasarkan jumlah fitur-1
+        % -------------------------------------------------------------------------------
         % iTraining dan iTesting = nge-set nilai metrik array ke berapa untuk ngisi data 
+        % -------------------------------------------------------------------------------
         iTraining = 1; % di Mtraining
         iTesting = 1; % di Mtesting
         for iBarisCM1Unique = 1 : length(CM1Unique) % Looping 1 s.d. 442
@@ -221,8 +223,9 @@ for iFold = 1:k
         % ---------------------------------------------------------------
         % Mencari nilai best split berdasarkan nilai GAIN tertinggi (max)
         % ---------------------------------------------------------------
-        [Nilai,BarisKe] = max(Mtraining02UrutSplit_1{iFold,iKolomCell}(:,9));
-        Mtraining03BestSplit_1{iFold,iKolomCell} = [BarisKe Nilai]; % nilai max Gain dari data split ke berapa
+        [Nilai,BarisKe] = max(Mtraining02UrutSplit_1{iFold,iKolomCell}(:,9)); % Ambil urutan ke berapa si split terbaik itu dan ambil nilai max gain-nya
+        angkaSplit = Mtraining02UrutSplit_1{iFold, iKolomCell}(BarisKe,1); % Angka split terbaik
+        Mtraining03BestSplit_1{iFold,iKolomCell} = [BarisKe angkaSplit Nilai]; % nilai max Gain dari data split ke berapa        
     end            
     
     % ---------------------------------------------------------------------
@@ -230,11 +233,11 @@ for iFold = 1:k
     % ---------------------------------------------------------------------
     for iKolomDiskrit = 1 : size(CM1Unique,2)-1 % 1 : 21
         for iBarisDiskrit = 1 : keteranganCM1(iFold,2) % 1 : jumlah training dari setiap fold
-            keBerapa = Mtraining03BestSplit_1{iFold,iKolomDiskrit}(1,1); % Untuk ambil nilai max gain ke berapa
+            splitPertama = Mtraining03BestSplit_1{iFold,iKolomDiskrit}(1,1); % Untuk ambil nilai max gain ke berapa
             % ----------------------------------------------------------------------
             % kalau data di array metrik kurang dari sama dengan kriteria EBD ( <= )
             % ----------------------------------------------------------------------
-            if Mtraining{iFold, iKolomDiskrit}(iBarisDiskrit,1) <= Mtraining02UrutSplit_1{iFold, iKolomDiskrit}( keBerapa , 1)                 
+            if Mtraining{iFold, iKolomDiskrit}(iBarisDiskrit,1) <= Mtraining02UrutSplit_1{iFold, iKolomDiskrit}( splitPertama , 1)                 
                 Mtraining04Biner_1{iFold,1}(iBarisDiskrit,iKolomDiskrit) = 0;
             % --------------------------------------------------------
             % kalau data di array metrik lebih dari kriteria EBD ( > )
@@ -268,13 +271,29 @@ for iFold = 1:k
         % Perlu dilakukan split EBD 2 fase
         % --------------------------------               
         for iKolomSplit = 1 : length(Mtraining02UrutSplit_1) % Iterasi kolom, ada 21
-            for iDataSplit = 1 : length(Mtraining02UrutSplit_1{iFold,iKolomSplit})-1  % Looping berdasarkan data jumlah split fase pertama dikurangi 1
+            A = 1;
+            B = 1;
+            for iDataSplit = 1 : length(Mtraining02UrutSplit_1{iFold,iKolomSplit})-1  % Looping berdasarkan data jumlah split fase pertama dikurangi 1   (401)             
                 dataPertama = Mtraining02UrutSplit_1{iFold,iKolomSplit}(iDataSplit,1); % Urutan data untuk split
                 dataKedua = Mtraining02UrutSplit_1{iFold,iKolomSplit}(iDataSplit+1,1); % Urutan data untuk split
-                Mtraining02UrutSplit_2{iFold, iKolomSplit}(iDataSplit,1) = (dataPertama+dataKedua)/2; % Ditambah dan dibagi dua, nilainya disimpan di kolom 1           
+                hasilSplitKedua = (dataPertama+dataKedua)/2; % Ditambah dan dibagi dua, nilainya disimpan di kolom 1    
+                Mtraining02UrutSplit_2{iFold, iKolomSplit}(iDataSplit,1) = hasilSplitKedua; % Nilai dimasukkan ke MtrainingUrutSplit2 (401)
+                
+                % -------------------------------------------------------------------------
+                % Cek masuk ke kategori <= atau > berdasarkan MtrainingBestSplit sebelumnya
+                % -------------------------------------------------------------------------
+                splitPertama = Mtraining03BestSplit_1{iFold,iKolomSplit}(1,2);
+                
+                if hasilSplitKedua <= splitPertama
+                    Mtraining02UrutSplit_2A{iFold, iKolomSplit}(A,1) = hasilSplitKedua;
+                    A = A + 1;
+                else
+                    Mtraining02UrutSplit_2B{iFold, iKolomSplit}(B,1) = hasilSplitKedua;
+                    B = B + 1;
+                end                                                
             end
         end
-        clear iKolomSplit iDataSplit;
+        clear iKolomSplit iDataSplit hasilSplitKedua splitPertama A B;
                 
 %         % ----------------------------------------------------------------------------------------------
 %         % Cari jumlah TRUE dan FALSE serta nilai ENTROPY di Mtraining berdasarkan "MtrainingUrutSplit_2"
@@ -309,7 +328,16 @@ for iFold = 1:k
 %                 MtrainingUrutSplit_2{iFold,iKolomCell}(iBarisSplit,3) = jmlFalseKurang; % Jumlah FALSE dengan parameter ( <= ) disimpan di kolom 3
 %                 MtrainingUrutSplit_2{iFold,iKolomCell}(iBarisSplit,5) = jmlTrueLebih; % Jumlah TRUE dengan parameter ( > ) disimpan di kolom 5
 %                 MtrainingUrutSplit_2{iFold,iKolomCell}(iBarisSplit,6) = jmlFalseLebih; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6
-% 
+
+
+
+
+
+
+
+
+
+
 %                 % -----------------------------------------
 %                 % Cari entropy child dari parameter ( <= )
 %                 % -----------------------------------------                         
@@ -391,7 +419,7 @@ for iFold = 1:k
 %             % ---------------------------------------------------------------
 %             [Nilai,BarisKe] = max(Mtraining02UrutSplit_1{iFold,iKolomCell}(:,9));
 %             BestSplit_2{iFold,iKolomCell} = [BarisKe Nilai]; % nilai max Gain dari data split ke berapa
-%         end 
+        end 
         
         
         
@@ -414,6 +442,7 @@ clear iFold cvFolds iterasi k testIdx;
 clear Nilai BarisKe;
 clear iBarisDiskrit iKolomDiskrit keBerapa;
 clear dataAwal dataChildKurang dataChildLebih dataFitur dataKedua dataKelas dataKelasnya dataPertama dataSplit jumlahDataUniqueTanpaKelas;
+clear angkaSplit;
 
 
 
