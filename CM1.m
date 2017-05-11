@@ -1,4 +1,5 @@
 tic
+
 % -------------------------------------
 % Tear-down semua display dan variable
 % -------------------------------------
@@ -21,12 +22,6 @@ k = 10;
 vektorCM1 = CM1Unique(:,1);
 cvFolds = crossvalind('Kfold', vektorCM1, k);
 clear vektorCM1;
-
-% -------------------------
-% Array 10 baris, 21 kolom
-% -------------------------
-% Mtraining = cell( 10 , (size(CM1Unique,2)-1) ); %(jumlah fold, jumlah fitur)
-% Mtesting = cell( 10 , (size(CM1Unique,2)-1) ); %(jumlah fold, jumlah fitur)
 
 % -------------
 % Iterasi fold
@@ -58,12 +53,10 @@ for iFold = 1:k
             jmlTesting(iFold,1) = jmlTesting(iFold,1) + 1; % Increment jmlTesting jika trainIdx nya ~= 1            
         end
     end          
-    clear iBarisCM1Unique;
            
-    % --------------------------------------------------------
-    % Menghitung entropy parent di tahap EBD dari setiap fold
-    % (menggunakan fungsi "entropyParentEBD")
-    % --------------------------------------------------------
+    % -----------------------------------------------------------------------------------------------
+    % Menghitung entropy parent di tahap EBD dari setiap fold (menggunakan fungsi "entropyParentEBD")
+    % -----------------------------------------------------------------------------------------------
     entropyParent = entropyParentEBD(jmlTrue,jmlFalse,jmlTraining,iFold);
     
     % -------------------------------------------------------------------
@@ -71,7 +64,7 @@ for iFold = 1:k
     % [1] Testing, [2] Training, [3] TRUE, [4] FALSE, [5] Entropy Parent
     % -------------------------------------------------------------------
     keteranganCM1(iFold,:) = [jmlTesting(iFold,:) jmlTraining(iFold,:) jmlTrue(iFold,:) jmlFalse(iFold,:) entropyParent(iFold,:)];
-    clear jmlTesting jmlTraining jmlTrue jmlFalse entropyParent;        
+
         
     % ------------------------------------------------------------
     % Mengisi data metrik Mtraining dan Mtesting (fitur dan kelas)
@@ -97,7 +90,7 @@ for iFold = 1:k
             end
         end        
     end
-    clear iTraining iTesting iBarisCM1Unique iKolomCell dataFitur dataKelas;        
+
     
     % ---------------------------------------------------------------------------
     % Split data training dengan cara dijumlah berdasarkan urutan dan dibagi dua
@@ -108,8 +101,7 @@ for iFold = 1:k
             dataKedua = Mtraining01Urut{iFold,iKolomCell}(iDataTraining+1,1); % Urutan data untuk split
             Mtraining02UrutSplit_1 {iFold,iKolomCell}(iDataTraining,1) = (dataPertama+dataKedua)/2; % Ditambah dan dibagi dua, nilainya disimpan di kolom 1           
         end            
-    end
-    clear iKolomCell iDataTraining dataPertama dataKedua;
+    end    
     
     % -------------------------------------------------------------------------------------------
     % Cari jumlah TRUE dan FALSE serta nilai ENTROPY di Mtraining berdasarkan MtrainingUrutSplit
@@ -148,28 +140,17 @@ for iFold = 1:k
             % -----------------------------------------
             % Cari entropy child dari parameter ( <= )
             % -----------------------------------------                         
-            totalKurang = jmlTrueKurang + jmlFalseKurang; % Total jumlah TRUE dan jumlah FALSE dari parameter ( <= )  
-            
+            totalKurang = jmlTrueKurang + jmlFalseKurang; % Total jumlah TRUE dan jumlah FALSE dari parameter ( <= )              
             if totalKurang ~=0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( <= )
                 piTrueKurang(iBarisSplit,1) = jmlTrueKurang / (jmlTrueKurang+jmlFalseKurang); % Hitung jumlah TRUE ( <= )
                 piFalseKurang(iBarisSplit,1) = jmlFalseKurang / (jmlTrueKurang+jmlFalseKurang); % Hitung jumlah FALSE ( <= )                
                 if piTrueKurang(iBarisSplit,1) == 0 || piFalseKurang(iBarisSplit,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild (<=) juga NOL
                     entropyChildKurang(iBarisSplit,1) = 0; % Entropy child ( <= ) dijadikan NOL
-                else % Jika hasil ( <= ) Pi TRUE dan Pi FALSE bukan NOL
-                    
+                else % Jika hasil ( <= ) Pi TRUE dan Pi FALSE bukan NOL                    
                     % ----------------------------
                     % Hitung entropy child ( <= )
                     % ----------------------------
-                    
-                    % ************************************************************************************************************************************
-%                     Log2piTrueKurang(iBarisSplit,1) = log2(piTrueKurang(iBarisSplit,1));
-%                     Log2piFalseKurang(iBarisSplit,1) = log2(piFalseKurang(iBarisSplit,1));
-%                     kaliLogTrueKurang(iBarisSplit,1) = Log2piTrueKurang(iBarisSplit,1) * piTrueKurang(iBarisSplit,1);
-%                     kaliLogFalseKurang(iBarisSplit,1) = Log2piFalseKurang(iBarisSplit,1) * piFalseKurang(iBarisSplit,1);
-%                     entropyChildKurang(iBarisSplit,1) = abs( kaliLogTrueKurang(iBarisSplit,1) + kaliLogFalseKurang(iBarisSplit,1) );    % ga usah
                     entropyChildKurang = entropyChildrenEBD(piTrueKurang, piFalseKurang,iBarisSplit);
-                    % ************************************************************************************************************************************
-                    
                 end                
             else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( <= ), maka dipastikan entropyChild (<=) juga NOL
                 entropyChildKurang(iBarisSplit,1) = 0; % Entropy child ( <= ) dijadikan NOL
@@ -188,23 +169,22 @@ for iFold = 1:k
                else % Jika hasil ( > ) Pi TRUE dan Pi FALSE bukan NOL
                    % ---------------------------
                    % Hitung entropy child ( > )
-                   % ---------------------------
-                   
-                   % ************************************************************************************************************************************
-%                    Log2piTrueLebih(iBarisSplit,1) = log2(piTrueLebih(iBarisSplit,1));
-%                    Log2piFalseLebih(iBarisSplit,1) = log2(piFalseLebih(iBarisSplit,1));
-%                    kaliLogTrueLebih(iBarisSplit,1) = Log2piTrueLebih(iBarisSplit,1) * piTrueLebih(iBarisSplit,1);
-%                    kaliLogFalseLebih(iBarisSplit,1) = Log2piFalseLebih(iBarisSplit,1) * piFalseLebih(iBarisSplit,1);
-%                    entropyChildLebih(iBarisSplit,1) = abs( kaliLogTrueLebih(iBarisSplit,1) + kaliLogFalseLebih(iBarisSplit,1) ); 
-                   
-                   entropyChildLebih = entropyChildrenEBD(piTrueLebih, piFalseLebih,iBarisSplit);
-                   % ************************************************************************************************************************************
+                   % ---------------------------                    
+                   entropyChildLebih = entropyChildrenEBD(piTrueLebih, piFalseLebih,iBarisSplit);                   
                end
             else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( > )
                 entropyChildLebih(iBarisSplit,1) = 0; % Entropy child ( > ) dijadikan NOL
             end            
             Mtraining02UrutSplit_1{iFold,iKolomCell}(iBarisSplit,7) = entropyChildLebih(iBarisSplit,1); % Nilai entropy child dari parameter ( > ) disimpan di kolom 7                                     
                    
+            % ----------------------------------------------------------------------
+            % Di-NOL-kan, karena jumlah TRUE dan FALSE setiap data split itu berbeda
+            % ----------------------------------------------------------------------
+            jmlTrueKurang = 0;
+            jmlFalseKurang = 0;
+            jmlTrueLebih = 0;
+            jmlFalseLebih = 0;
+            
             % -----------------------------------------
             % Mencari nilai INFO dari setiap data split
             % -----------------------------------------
@@ -217,15 +197,7 @@ for iFold = 1:k
             % Mencari nilai GAIN dari setiap INFO
             % ------------------------------------
             GAINinfo(iBarisSplit,1) = keteranganCM1(iFold,5) - INFOsplit(iBarisSplit,1);
-            Mtraining02UrutSplit_1{iFold,iKolomCell}(iBarisSplit,9) = GAINinfo(iBarisSplit,1); % nilai INFO dari data SPLIT. disimpan di kolom 9
-            
-            % ----------------------------------------------------------------------
-            % Di-NOL-kan, karena jumlah TRUE dan FALSE setiap data split itu berbeda
-            % ----------------------------------------------------------------------
-            jmlTrueKurang = 0;
-            jmlFalseKurang = 0;
-            jmlTrueLebih = 0;
-            jmlFalseLebih = 0;
+            Mtraining02UrutSplit_1{iFold,iKolomCell}(iBarisSplit,9) = GAINinfo(iBarisSplit,1); % nilai INFO dari data SPLIT. disimpan di kolom 9                        
             
             % ----------------------------------------------------------------------------------------------------------------------------
             % Penyederhanaan variable "MtrainingUrutSplit" 
@@ -240,15 +212,7 @@ for iFold = 1:k
         angkaSplit = Mtraining02UrutSplit_1{iFold, iKolomCell}(BarisKe,1); % Angka split terbaik
         Mtraining03BestSplit_1{iFold,iKolomCell} = [BarisKe angkaSplit Nilai]; % nilai max Gain dari data split ke berapa        
     end  
-    clear jmlTrueKurang jmlFalseKurang jmlTrueLebih jmlFalseLebih;
-    clear iKolomCell iBarisSplit iBarisTraining;
-    clear dataAwal dataSplit;
-    clear totalKurang piTrueKurang piFalseKurang entropyChildKurang;
-    clear Log2piTrueKurang Log2piFalseKurang kaliLogTrueKurang kaliLogFalseKurang;
-    clear totalLebih piTrueLebih piFalseLebih entropyChildLebih;
-    clear Log2piTrueLebih Log2piFalseLebih kaliLogTrueLebih kaliLogFalseLebih;    
-    clear dataChildKurang dataChildLebih INFOsplit GAINinfo;
-    clear Nilai BarisKe angkaSplit;
+    
     
     
     % ---------------------------------------------------------------------
@@ -277,7 +241,7 @@ for iFold = 1:k
             end                                    
         end           
     end   
-    clear iKolomDiskrit iBarisDiskrit dataKelasnya;
+    
     
     % -------------------------------
     % Distinct data MtrainingBiner_1
@@ -295,13 +259,13 @@ for iFold = 1:k
         % Perlu dilakukan split EBD 2 fase
         % --------------------------------               
         for iKolomSplit = 1 : length(Mtraining02UrutSplit_1) % Iterasi kolom, ada 21
-            A = 1;
-            B = 1;
-            for iDataSplit = 1 : length(Mtraining02UrutSplit_1{iFold,iKolomSplit})-1  % Looping berdasarkan data jumlah split fase pertama dikurangi 1   (401)             
+            A = 1; % Untuk parameter <=
+            B = 1; % Untuk parameter >
+            for iDataSplit = 1 : length(Mtraining02UrutSplit_1{iFold,iKolomSplit})-1  % Looping berdasarkan data jumlah split fase pertama dikurangi 1             
                 dataPertama = Mtraining02UrutSplit_1{iFold,iKolomSplit}(iDataSplit,1); % Urutan data untuk split
                 dataKedua = Mtraining02UrutSplit_1{iFold,iKolomSplit}(iDataSplit+1,1); % Urutan data untuk split
                 hasilSplitKedua = (dataPertama+dataKedua)/2; % Ditambah dan dibagi dua, nilainya disimpan di kolom 1    
-                Mtraining02UrutSplit_2{iFold, iKolomSplit}(iDataSplit,1) = hasilSplitKedua; % Nilai dimasukkan ke MtrainingUrutSplit2 (401)
+%                 Mtraining02UrutSplit_2{iFold, iKolomSplit}(iDataSplit,1) = hasilSplitKedua; % Nilai dimasukkan ke MtrainingUrutSplit2
                 
                 % ----------------------------------------------------------------------------------
                 % Cek masuk ke kategori <= atau kategori > berdasarkan MtrainingBestSplit sebelumnya
@@ -317,8 +281,9 @@ for iFold = 1:k
                 end                                                
             end
         end
-        clear iKolomSplit iDataSplit hasilSplitKedua splitPertama A B dataPertama dataKedua hasilSplitKedua Mtraining02UrutSplit_2;
         
+        
+        % ****************************************************************************************************************************************************************
         % ****************************************************************************************************************************************************************
         
         % -------------------------------------------------------------------------------------------------
@@ -336,8 +301,7 @@ for iFold = 1:k
                     % -----------------------------------------------------------
                     dataAwalA = Mtraining01Urut{iFold, iKolomCellA}(iBarisTrainingA,1); % Data training
                     dataSplitA = Mtraining02UrutSplit_2A{iFold, iKolomCellA}(iBarisSplitA,1); % Data split
-                    dataKelasA = Mtraining01Urut{iFold, iKolomCellA}(iBarisTrainingA,2); % Data kelas
-                    
+                    dataKelasA = Mtraining01Urut{iFold, iKolomCellA}(iBarisTrainingA,2); % Data kelas                    
                     if dataAwalA <= dataSplitA % ada berapa data training yang ( <= ) data split                    
                         if  dataKelasA == 1 % Hitung jumlah TRUE pada parameter ( <= )
                             jmlTrueKurangA = jmlTrueKurangA + 1; % Hitung jumlah TRUE ( <= )                         
@@ -355,22 +319,58 @@ for iFold = 1:k
                 Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,2) = jmlTrueKurangA; % Jumlah TRUE dengan parameter ( <= ) disimpan di kolom 2
                 Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,3) = jmlFalseKurangA; % Jumlah FALSE dengan parameter ( <= ) disimpan di kolom 3
                 Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,5) = jmlTrueLebihA; % Jumlah TRUE dengan parameter ( > ) disimpan di kolom 5
-                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,6) = jmlFalseLebihA; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6
+                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,6) = jmlFalseLebihA; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6                                
                 
+                % ---------------------------------------------
+                % Cari entropy child "2A" dari parameter ( <= )
+                % ---------------------------------------------                       
+                totalKurangA = jmlTrueKurangA + jmlFalseKurangA; % Total jumlah TRUE dan jumlah FALSE dari parameter ( <= )              
+                if totalKurangA ~=0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( <= )
+                    piTrueKurangA(iBarisSplitA,1) = jmlTrueKurangA / (jmlTrueKurangA+jmlFalseKurangA); % Hitung jumlah TRUE ( <= )
+                    piFalseKurangA(iBarisSplitA,1) = jmlFalseKurangA / (jmlTrueKurangA+jmlFalseKurangA); % Hitung jumlah FALSE ( <= )                
+                    if piTrueKurangA(iBarisSplitA,1) == 0 || piFalseKurangA(iBarisSplitA,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild (<=) juga NOL
+                        entropyChildKurangA(iBarisSplitA,1) = 0; % Entropy child ( <= ) dijadikan NOL
+                    else % Jika hasil ( <= ) Pi TRUE dan Pi FALSE bukan NOL                    
+                        % ----------------------------
+                        % Hitung entropy child ( <= )
+                        % ----------------------------
+                        entropyChildKurangA = entropyChildrenEBD(piTrueKurangA,piFalseKurangA,iBarisSplitA);
+                    end                
+                else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( <= ), maka dipastikan entropyChild (<=) juga NOL
+                    entropyChildKurangA(iBarisSplitA,1) = 0; % Entropy child ( <= ) dijadikan NOL
+                end             
+                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,4) = entropyChildKurangA(iBarisSplitA,1); % Nilai entropy child dari parameter ( <= ) disimpan di kolom 4                          
+
+                % --------------------------------------------
+                % Cari entropy child "2A" dari parameter ( > )
+                % --------------------------------------------                         
+                totalLebihA = jmlTrueLebihA + jmlFalseLebihA; % Total jumlah TRUE dan jumlah FALSE dari parameter ( > )                        
+                if totalLebihA ~= 0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( > )
+                   piTrueLebihA(iBarisSplitA,1) = jmlTrueLebihA / (jmlTrueLebihA+jmlFalseLebihA); % Hitung jumlah TRUE ( > )
+                   piFalseLebihA(iBarisSplitA,1) = jmlFalseLebihA / (jmlTrueLebihA+jmlFalseLebihA); % Hitung jumlah FALSE ( > )                
+                   if piTrueLebihA(iBarisSplitA,1) == 0 || piFalseLebihA(iBarisSplitA,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild ( > ) juga NOL                   
+                       entropyChildLebihA(iBarisSplitA,1) = 0; % Entropy child ( > ) dijadikan NOL
+                   else % Jika hasil ( > ) Pi TRUE dan Pi FALSE bukan NOL
+                       % ---------------------------
+                       % Hitung entropy child ( > )
+                       % ---------------------------                    
+                       entropyChildLebihA = entropyChildrenEBD(piTrueLebihA, piFalseLebihA,iBarisSplitA);                   
+                   end
+                else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( > )
+                    entropyChildLebihA(iBarisSplitA,1) = 0; % Entropy child ( > ) dijadikan NOL
+                end            
+                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,7) = entropyChildLebihA(iBarisSplitA,1); % Nilai entropy child dari parameter ( > ) disimpan di kolom 7 
+                
+                % ----------------------------------------------------------------------
+                % Di-NOL-kan, karena jumlah TRUE dan FALSE setiap data split itu berbeda
+                % ----------------------------------------------------------------------                
                 jmlTrueKurangA = 0;
                 jmlFalseKurangA = 0;
                 jmlTrueLebihA = 0;
-                jmlFalseLebihA = 0;
-                
-                % fungsi ent children <= A
-                % fungsi ent children > A
-                
-            end  
-            
+                jmlFalseLebihA = 0;                                                
+            end              
         end
-        clear jmlTrueKurangA jmlFalseKurangA jmlTrueLebihA jmlFalseLebihA;
-        clear iKolomCellA iBarisSplitA iBarisTrainingA;
-        clear dataAwalA dataSplitA dataKelasA;
+        
         
         % ****************************************************************************************************************************************************************
         
@@ -408,34 +408,104 @@ for iFold = 1:k
                 Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,2) = jmlTrueKurangB; % Jumlah TRUE dengan parameter ( <= ) disimpan di kolom 2
                 Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,3) = jmlFalseKurangB; % Jumlah FALSE dengan parameter ( <= ) disimpan di kolom 3
                 Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,5) = jmlTrueLebihB; % Jumlah TRUE dengan parameter ( > ) disimpan di kolom 5
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,6) = jmlFalseLebihB; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6
+                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,6) = jmlFalseLebihB; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6                                
                 
+                % ---------------------------------------------
+                % Cari entropy child "2B" dari parameter ( <= )
+                % ---------------------------------------------                       
+                totalKurangB = jmlTrueKurangB + jmlFalseKurangB; % Total jumlah TRUE dan jumlah FALSE dari parameter ( <= )              
+                if totalKurangB ~=0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( <= )
+                    piTrueKurangB(iBarisSplitB,1) = jmlTrueKurangB / (jmlTrueKurangB+jmlFalseKurangB); % Hitung jumlah TRUE ( <= )
+                    piFalseKurangB(iBarisSplitB,1) = jmlFalseKurangB / (jmlTrueKurangB+jmlFalseKurangB); % Hitung jumlah FALSE ( <= )                
+                    if piTrueKurangB(iBarisSplitB,1) == 0 || piFalseKurangB(iBarisSplitB,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild (<=) juga NOL
+                        entropyChildKurangB(iBarisSplitB,1) = 0; % Entropy child ( <= ) dijadikan NOL
+                    else % Jika hasil ( <= ) Pi TRUE dan Pi FALSE bukan NOL                    
+                        % ----------------------------
+                        % Hitung entropy child ( <= )
+                        % ----------------------------
+                        entropyChildKurangB = entropyChildrenEBD(piTrueKurangB,piFalseKurangB,iBarisSplitB);
+                    end                
+                else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( <= ), maka dipastikan entropyChild (<=) juga NOL
+                    entropyChildKurangB(iBarisSplitB,1) = 0; % Entropy child ( <= ) dijadikan NOL
+                end             
+                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,4) = entropyChildKurangB(iBarisSplitB,1); % Nilai entropy child dari parameter ( <= ) disimpan di kolom 4                          
+
+                % --------------------------------------------
+                % Cari entropy child "2B" dari parameter ( > )
+                % --------------------------------------------                         
+                totalLebihB = jmlTrueLebihB + jmlFalseLebihB; % Total jumlah TRUE dan jumlah FALSE dari parameter ( > )                        
+                if totalLebihB ~= 0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( > )
+                   piTrueLebihB(iBarisSplitB,1) = jmlTrueLebihB / (jmlTrueLebihB+jmlFalseLebihB); % Hitung jumlah TRUE ( > )
+                   piFalseLebihB(iBarisSplitB,1) = jmlFalseLebihB / (jmlTrueLebihB+jmlFalseLebihB); % Hitung jumlah FALSE ( > )                
+                   if piTrueLebihB(iBarisSplitB,1) == 0 || piFalseLebihB(iBarisSplitB,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild ( > ) juga NOL                   
+                       entropyChildLebihB(iBarisSplitB,1) = 0; % Entropy child ( > ) dijadikan NOL
+                   else % Jika hasil ( > ) Pi TRUE dan Pi FALSE bukan NOL
+                       % ---------------------------
+                       % Hitung entropy child ( > )
+                       % ---------------------------                    
+                       entropyChildLebihB = entropyChildrenEBD(piTrueLebihB, piFalseLebihB,iBarisSplitB);                   
+                   end
+                else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( > )
+                    entropyChildLebihB(iBarisSplitB,1) = 0; % Entropy child ( > ) dijadikan NOL
+                end            
+                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,7) = entropyChildLebihB(iBarisSplitB,1); % Nilai entropy child dari parameter ( > ) disimpan di kolom 7                                 
+                
+                % ----------------------------------------------------------------------
+                % Di-NOL-kan, karena jumlah TRUE dan FALSE setiap data split itu berbeda
+                % ----------------------------------------------------------------------
                 jmlTrueKurangB = 0;
                 jmlFalseKurangB = 0;
                 jmlTrueLebihB = 0;
-                jmlFalseLebihB = 0;
-                
-                % fungsi ent children <= B
-                % fungsi ent children > B
+                jmlFalseLebihB = 0;                                
             end                    
-        end
-        clear jmlTrueKurangB jmlFalseKurangB jmlTrueLebihB jmlFalseLebihB;
-        clear iKolomCellB iBarisSplitB iBarisTrainingB;
-        clear dataAwalB dataSplitB dataKelasB;
-        
+        end                
         % ****************************************************************************************************************************************************************
-        
-        
-        
+        % ****************************************************************************************************************************************************************                
     %--- 
     else
         disp(iFold);
-    end
-    clear jumlahDataUniqueTanpaKelas;
-    
-    
+        disp('joss');
+    end            
 end
+
+clear iBarisCM1Unique;
+    
+clear jmlTesting jmlTraining jmlTrue jmlFalse entropyParent;  
+    
+clear iTraining iTesting iBarisCM1Unique iKolomCell dataFitur dataKelas;      
+    
+clear iKolomCell iDataTraining dataPertama dataKedua;
+
+clear jmlTrueKurang jmlFalseKurang jmlTrueLebih jmlFalseLebih;
+clear iKolomCell iBarisSplit iBarisTraining;
+clear dataAwal dataSplit;
+clear totalKurang piTrueKurang piFalseKurang entropyChildKurang;
+clear Log2piTrueKurang Log2piFalseKurang kaliLogTrueKurang kaliLogFalseKurang;
+clear totalLebih piTrueLebih piFalseLebih entropyChildLebih;
+clear Log2piTrueLebih Log2piFalseLebih kaliLogTrueLebih kaliLogFalseLebih;    
+clear dataChildKurang dataChildLebih INFOsplit GAINinfo;
+clear Nilai BarisKe angkaSplit;
+
+clear iKolomDiskrit iBarisDiskrit dataKelasnya;
+
+clear iKolomSplit iDataSplit hasilSplitKedua splitPertama A B dataPertama dataKedua hasilSplitKedua Mtraining02UrutSplit_2;
+
+clear jmlTrueKurangA jmlFalseKurangA jmlTrueLebihA jmlFalseLebihA totalLebihA totalKurangA;
+clear piTrueKurangA piFalseKurangA piTrueLebihA piFalseLebihA;
+clear entropyChildKurangA entropyChildLebihA;
+clear iKolomCellA iBarisSplitA iBarisTrainingA;
+clear dataAwalA dataSplitA dataKelasA;
+
+clear jmlTrueKurangB jmlFalseKurangB jmlTrueLebihB jmlFalseLebihB totalLebihB totalKurangB;
+clear piTrueKurangB piFalseKurangB piTrueLebihB piFalseLebihB;
+clear entropyChildKurangB entropyChildLebihB;
+clear iKolomCellB iBarisSplitB iBarisTrainingB;
+clear dataAwalB dataSplitB dataKelasB;
+
+clear jumlahDataUniqueTanpaKelas;
+
 clear iFold cvFolds k testIdx vektorCM1;
+
 toc
 
 
