@@ -18,7 +18,7 @@ CM1Unique = csvread('CM1Unique.csv');
 % --------------------
 % Pembagian fold = 10
 % --------------------
-k = 10;
+k = 10; %length(CM1Unique);
 vektorCM1 = CM1Unique(:,1);
 cvFolds = crossvalind('Kfold', vektorCM1, k);
 clear vektorCM1;
@@ -60,7 +60,7 @@ for iFold = 1:k
     entropyParent = entropyParentEBD(jmlTrue,jmlFalse,jmlTraining,iFold);
     
     % -------------------------------------------------------------------
-    % Menyederhanakan variable "keteranganCM1" 
+    % Menyederhanakan variable "keteranganCM1" (setiap fold)
     % [1] Testing, [2] Training, [3] TRUE, [4] FALSE, [5] Entropy Parent
     % -------------------------------------------------------------------
     keteranganCM1(iFold,:) = [jmlTesting(iFold,:) jmlTraining(iFold,:) jmlTrue(iFold,:) jmlFalse(iFold,:) entropyParent(iFold,:)];
@@ -76,13 +76,13 @@ for iFold = 1:k
         iTraining = 1; % di Mtraining
         iTesting = 1; % di Mtesting
         for iBarisCM1Unique = 1 : length(CM1Unique) % Looping 1 s.d. 442
-            if trainIdx(iBarisCM1Unique,iFold) == 1 % Mengambil urutan CM1Unique berdasarkan trainIdx = 1
+            if trainIdx(iBarisCM1Unique,iFold) == 1 % Mengambil urutan CM1Unique berdasarkan trainIdx = 1 [TRAINING]
                 dataFitur = CM1Unique(iBarisCM1Unique,iKolomCell); % Data fitur training
-                dataKelas = CM1Unique(iBarisCM1Unique,22); % Data kelas training
+                dataKelas = CM1Unique(iBarisCM1Unique,22); % Data kelas training <--- MANUAL ambil kelas
                 Mtraining{iFold,iKolomCell}(iTraining,:) = [dataFitur dataKelas]; % Mengisi array metrik[fitur,kelas] untuk Mtraining
                 Mtraining01Urut{iFold,iKolomCell} = sortrows(Mtraining{iFold,iKolomCell}); % Diurutkan berdasarkan kolom pertama
                 iTraining = iTraining + 1;
-            else % Mengambil urutan (trainIdx ~= 1) dengan CM1Unique
+            else % Mengambil urutan (trainIdx ~= 1) dengan CM1Unique [TESTING]
                 dataFitur = CM1Unique(iBarisCM1Unique,iKolomCell); % Data fitur testing
                 dataKelas = CM1Unique(iBarisCM1Unique,22); % Data fitur testing
                 Mtesting{iFold,iKolomCell}(iTesting,:) = [dataFitur dataKelas]; % Mengisi array metrik[fitur,kelas] untuk Mtesting                
@@ -103,9 +103,9 @@ for iFold = 1:k
         end            
     end    
     
-    % -------------------------------------------------------------------------------------------
-    % Cari jumlah TRUE dan FALSE serta nilai ENTROPY di Mtraining berdasarkan MtrainingUrutSplit
-    % -------------------------------------------------------------------------------------------
+    % -------------------------------------------------------------------------------------------------------
+    % Cari jumlah TRUE dan FALSE serta nilai ENTROPY children di Mtraining berdasarkan Mtraining02UrutSplit_1
+    % -------------------------------------------------------------------------------------------------------
     jmlTrueKurang = 0;
     jmlFalseKurang = 0;
     jmlTrueLebih = 0;
@@ -200,40 +200,37 @@ for iFold = 1:k
             Mtraining02UrutSplit_1{iFold,iKolomCell}(iBarisSplit,9) = GAINinfo(iBarisSplit,1); % nilai INFO dari data SPLIT. disimpan di kolom 9                        
             
             % ----------------------------------------------------------------------------------------------------------------------------
-            % Penyederhanaan variable "MtrainingUrutSplit" 
+            % Penyederhanaan variable "Mtraining02UrutSplit_1" 
             % [1] Data Split, [2] TRUE(<=), [3] FALSE(<=), [4] entropy(<=), [5] TRUE(>), [6] FALSE(>), [7] entropy(>), [8] INFO, [9] GAIN
             % ----------------------------------------------------------------------------------------------------------------------------                       
         end
                 
-        % ---------------------------------------------------------------
-        % Mencari nilai best split berdasarkan nilai GAIN tertinggi (max)
-        % ---------------------------------------------------------------
+        % -----------------------------------------------------------------------------------------
+        % Mencari nilai best split berdasarkan nilai GAIN tertinggi (max) di Mtraining02UrutSplit_1
+        % -----------------------------------------------------------------------------------------
         [Nilai,BarisKe] = max(Mtraining02UrutSplit_1{iFold,iKolomCell}(:,9)); % Ambil urutan ke berapa si split terbaik itu dan ambil nilai max gain-nya
         angkaSplit = Mtraining02UrutSplit_1{iFold, iKolomCell}(BarisKe,1); % Angka split terbaik
         Mtraining03BestSplit_1{iFold,iKolomCell} = [BarisKe angkaSplit Nilai]; % nilai max Gain dari data split ke berapa        
     end  
-    
-    
-    
+            
     % ---------------------------------------------------------------------
     % Diskritisasi data numerik (Training) berdasakan best split ( <= , > )
     % ---------------------------------------------------------------------
     for iKolomDiskrit = 1 : size(CM1Unique,2)-1 % 1 : 21
-        for iBarisDiskrit = 1 : keteranganCM1(iFold,2) % 1 : jumlah training dari setiap fold
-            % splitPertama = Mtraining03BestSplit_1{iFold,iKolomDiskrit}(1,1); % Untuk ambil nilai max gain ke berapa
-            % ----------------------------------------------------------------------
-            % kalau data di array metrik kurang dari sama dengan kriteria EBD ( <= )
-            % ----------------------------------------------------------------------
-            if Mtraining{iFold, iKolomDiskrit}(iBarisDiskrit,1) <= Mtraining03BestSplit_1{iFold,iKolomDiskrit}(1,2) %Mtraining02UrutSplit_1{iFold, iKolomDiskrit}( splitPertama , 1)                 
+        for iBarisDiskrit = 1 : keteranganCM1(iFold,2) % 1 : jumlah training dari setiap fold            
+            % ---------------------------------------------------------------
+            % kalau data TRAINING kurang dari sama dengan kriteria EBD ( <= )
+            % ---------------------------------------------------------------
+            if Mtraining{iFold, iKolomDiskrit}(iBarisDiskrit,1) <= Mtraining03BestSplit_1{iFold,iKolomDiskrit}(1,2)
                 Mtraining04Biner_1{iFold,1}(iBarisDiskrit,iKolomDiskrit) = 0;
             % --------------------------------------------------------
-            % kalau data di array metrik lebih dari kriteria EBD ( > )
+            % kalau data TRAINING lebih dari kriteria EBD ( > )
             % --------------------------------------------------------
             else                
                 Mtraining04Biner_1{iFold,1}(iBarisDiskrit,iKolomDiskrit) = 1;
             end
             % -----------------------------------------------------
-            % Menambahkan kolom kelas ke metrik MtrainingDsikritAll
+            % Menambahkan kolom kelas ke Mtraining04Biner_1
             % -----------------------------------------------------
             if iKolomDiskrit == size(CM1Unique,2)-1 %21              
                 dataKelasnya = Mtraining{iFold,iKolomDiskrit}(iBarisDiskrit,2); % ambil data kelas dari Mtraining
@@ -241,18 +238,19 @@ for iFold = 1:k
             end                                    
         end           
     end   
-    
-    
-    % -------------------------------
-    % Distinct data MtrainingBiner_1
-    % -------------------------------
+        
+    % ----------------------------------------------------------------------
+    % Distinct data MtrainingBiner_1 --> agar tidak ada redudansi data biner
+    % ----------------------------------------------------------------------
     Mtraining05UniqueBiner_1{iFold,1} = unique(Mtraining04Biner_1{iFold,1},'rows'); % Data redundan diseleksi (include kelas)
     
-    % --------------------------------------------------------------------------------------------------------------------------------
-    % Jika masih ada duplikasi pada "MtrainingUniqueBiner_1" tanpa kelas, maka bisa dipastikan ada duplikasi dengan kelas yang berbeda
-    % --------------------------------------------------------------------------------------------------------------------------------
-    jumlahDataUniqueTanpaKelas = length(unique(Mtraining05UniqueBiner_1{iFold,1}(:,1:21),'rows')); % Data unique tanpa kelas
-    if  jumlahDataUniqueTanpaKelas ~= length(Mtraining05UniqueBiner_1{iFold,1}) % Data unique tanpa kelas ~= data unique
+    % ---------------------------------------------------------------------------------------------------------------------------------------
+    % Jika jumlah "Mtraining05UniqueBiner_1" DENGAN dan TANPA kelas itu berbeda, maka dipastikan ada duplikasi data dengan kelas yang berbeda
+    % ---------------------------------------------------------------------------------------------------------------------------------------
+    uniqueDenganKelas = length(Mtraining05UniqueBiner_1{iFold,1}); % jumlah unique dengan kelasnya juga
+    uniqueTanpaKelas = length(unique(Mtraining05UniqueBiner_1{iFold,1}(:,1:21),'rows')); % Data unique tanpa kelas
+    if  uniqueTanpaKelas ~= uniqueDenganKelas % Data unique tanpa kelas ~= data unique 
+        hasilEBD(iFold,:) = [iFold uniqueTanpaKelas length(Mtraining05UniqueBiner_1{iFold,1})] ; % Perbandingan jumlah unique DENGAN dan TANPA kelas                    
     %---
     
         % --------------------------------
@@ -262,209 +260,158 @@ for iFold = 1:k
             A = 1; % Untuk parameter <=
             B = 1; % Untuk parameter >
             for iDataSplit = 1 : length(Mtraining02UrutSplit_1{iFold,iKolomSplit})-1  % Looping berdasarkan data jumlah split fase pertama dikurangi 1             
-                dataPertama = Mtraining02UrutSplit_1{iFold,iKolomSplit}(iDataSplit,1); % Urutan data untuk split
-                dataKedua = Mtraining02UrutSplit_1{iFold,iKolomSplit}(iDataSplit+1,1); % Urutan data untuk split
+                dataPertama = Mtraining02UrutSplit_1{iFold,iKolomSplit}(iDataSplit,1); % Urutan data untuk split pertama
+                dataKedua = Mtraining02UrutSplit_1{iFold,iKolomSplit}(iDataSplit+1,1); % Urutan data untuk split kedua
                 hasilSplitKedua = (dataPertama+dataKedua)/2; % Ditambah dan dibagi dua, nilainya disimpan di kolom 1    
-%                 Mtraining02UrutSplit_2{iFold, iKolomSplit}(iDataSplit,1) = hasilSplitKedua; % Nilai dimasukkan ke MtrainingUrutSplit2
                 
                 % ----------------------------------------------------------------------------------
                 % Cek masuk ke kategori <= atau kategori > berdasarkan MtrainingBestSplit sebelumnya
                 % ----------------------------------------------------------------------------------
-                splitPertama = Mtraining03BestSplit_1{iFold,iKolomSplit}(1,2);
+                splitPertama = Mtraining03BestSplit_1{iFold,iKolomSplit}(1,2); % Ambil nilai split dari fase pertama
                 
-                if hasilSplitKedua <= splitPertama
-                    Mtraining02UrutSplit_2A{iFold, iKolomSplit}(A,1) = hasilSplitKedua;
+                if hasilSplitKedua <= splitPertama % Kalau nilai split FASE 2 <= split FASE 1
+                    Mtraining02UrutSplit_2A{iFold, iKolomSplit}(A,1) = hasilSplitKedua; % Masuk kategori A
                     A = A + 1;
                 else
-                    Mtraining02UrutSplit_2B{iFold, iKolomSplit}(B,1) = hasilSplitKedua;
+                    Mtraining02UrutSplit_2B{iFold, iKolomSplit}(B,1) = hasilSplitKedua; % Masuk kategori B
                     B = B + 1;
-                end                                                
+                end                                  
+            end
+            
+            % ANTISIPASI kalau data di 2B adalah matrix kosong [], misalnya
+            % data max GAIN pada fase split pertama berada di paling bawah ( <= ),
+            % maka kategori ( > ) tidak ada datanya
+            if length(Mtraining02UrutSplit_2B{iFold,iKolomSplit}) == 0
+                Mtraining02UrutSplit_2B{iFold,iKolomSplit}(iDataSplit,:) = [0,0,0,0,0,0,0,0,0];
+            end
+            
+        end
+                
+        % ---------------------------------------------
+%1      % Update kolom pada "Mtraining02UrutSplit_2A" :
+        % ---------------------------------------------
+        % Jumlah TRUE ( <= ) data split FASE 2A          [2] 
+        % Jumlah FALSE ( <= ) data split FASE 2A         [3] 
+        % Entropy CHILDREN ( <= ) di data split FASE 2A  [4] 
+        % Jumlah TRUE ( > ) data split FASE 2A           [5] 
+        % Jumlah FALSE ( > ) data split FASE 2A          [6] 
+        % Entropy CHILDREN ( > ) di data split FASE 2A   [7] 
+        % Nilai INFO dari setiap data split 2A           [8] 
+        % Nilai GAIN dari setiap data split 2A           [9]         
+        % ------------------------------------------------------------
+%2      % Mencari nilai GAIN (max) dari setiap FOLD dan FITUR:
+        % "Mtraining03BestSplit_2A" --> [barisKe,angkaSplit,nilaiGain]            
+        % -------------------------------------------------------------------------------------------------------
+%3      % Konversi data TRAINING menjadi data BINER berdasarkan angka SPLIT TERBAIK di "Mtraining03BestSplit_2A":
+        % Nilai BINER disimpan di "Mtraining04Biner_2AB" --> [biner2A,biner2B]
+        % -------------------------------------------------------------------------------------------------------
+        fase_2A;        
+                
+        % ---------------------------------------------
+%4      % Update kolom pada "Mtraining02UrutSplit_2B" :
+        % ---------------------------------------------
+        % Jumlah TRUE ( <= ) data split FASE 2B          [2] 
+        % Jumlah FALSE ( <= ) data split FASE 2B         [3] 
+        % Entropy CHILDREN ( <= ) di data split FASE 2B  [4] 
+        % Jumlah TRUE ( > ) data split FASE 2B           [5] 
+        % Jumlah FALSE ( > ) data split FASE 2B          [6] 
+        % Entropy CHILDREN ( > ) di data split FASE 2B   [7] 
+        % Nilai INFO dari setiap data split 2B           [8] 
+        % Nilai GAIN dari setiap data split 2B           [9]           
+        % ------------------------------------------------------------
+%5      % Mencari nilai GAIN (max) dari setiap FOLD dan FITUR:
+        % "Mtraining03BestSplit_2B" --> [barisKe,angkaSplit,nilaiGain]                                
+        % -------------------------------------------------------------------------------------------------------
+%6      % Konversi data TRAINING menjadi data BINER berdasarkan angka SPLIT TERBAIK di "Mtraining03BestSplit_2B":
+        % Nilai BINER disimpan di "Mtraining04Biner_2AB" --> [biner2A,biner2B]
+        % -------------------------------------------------------------------------------------------------------
+        fase_2B;        
+                                
+        
+        % --------------------------------------------------------------------
+        % Cloning "Mtraining04Biner_1" exclude KELAS ke "Mtraining04Biner_ALL"
+        % --------------------------------------------------------------------
+        for iKolom = 1 : size(CM1Unique,2)-1 % 1 : 21 [array]
+            for iBaris = 1 : keteranganCM1(iFold,2) % banyaknya data training berdasarkan setiap fold                                                                   
+                for iKolomData = 1 : size(CM1Unique,2)-1 % 1 : 21 [metrik]                
+                    Mtraining04Biner_ALL{iFold,iKolom}(iBaris,iKolomData) = Mtraining04Biner_1{iFold,1}(iBaris, iKolomData);                                     
+                end                              
+            end
+        end
+        
+        % ----------------------------------------------------------------------------------------
+        % Penggabungan biner FASE 1 dengan biner FASE 2 (A dan B), berdasarkan masing-masing fitur
+        % ----------------------------------------------------------------------------------------
+        totalFitur = size(CM1Unique,2)-1; % 21
+        for iKolomArray = 1 : totalFitur % 1 : 21
+            for iBarisBiner = 1 : keteranganCM1(iFold,2) % banyaknya data training berdasarkan setiap fold  
+                dataA = Mtraining04Biner_2AB{iFold,iKolomArray}(iBarisBiner,1); % Nilai biner A
+                dataB = Mtraining04Biner_2AB{iFold,iKolomArray}(iBarisBiner,2); % Nilai biner B                     
+                Mtraining04Biner_ALL{iFold,iKolomArray}(iBarisBiner,totalFitur+1) = dataA; % A disimpan di kolom 22
+                Mtraining04Biner_ALL{iFold,iKolomArray}(iBarisBiner,totalFitur+2) = dataB; % B disimpan di kolom 23      
+                Mtraining04Biner_ALL{iFold,iKolomArray}(iBarisBiner,totalFitur+3) = Mtraining04Biner_1{iFold,1}(iBarisBiner, 22); % KELAS disimpan di kolom 24
+                
+                % -----------------------------------------------------------------
+                % Distinct data "Mtraining04Biner_ALL" (SEMUA fitur TERMASUK kelas)
+                % -----------------------------------------------------------------
+                Mtraining05UniqueBiner_2{iFold,iKolomArray} = unique(Mtraining04Biner_ALL{iFold,iKolomArray},'rows'); % Data redundan diseleksi (include kelas)               
+                
+                % ---------------------------------------------------------------------------------------------------------------------------------------
+                % Jika masih ada duplikasi pada "Mtraining05UniqueBiner_2" TANPA kelas, maka bisa dipastikan ada duplikasi data dengan kelas yang berbeda
+                % ---------------------------------------------------------------------------------------------------------------------------------------                                         
+                uniqueBinerAllDenganKelas = length(Mtraining05UniqueBiner_2{iFold,iKolomArray}); % jumlah unique dengan kelasnya juga
+                uniqueBinerAllTanpaKelas = length(unique(Mtraining05UniqueBiner_2{iFold,iKolomArray}(:,1:23),'rows')); % Jumlah unique tanpa kelas                
+                                    
+                if  uniqueBinerAllTanpaKelas ~= uniqueBinerAllDenganKelas % Data unique tanpa kelas ~= data unique
+                    hasilEBD_2{iFold,iKolomArray}( 1 ,:) = [uniqueBinerAllTanpaKelas length(Mtraining05UniqueBiner_2{iFold,iKolomArray})] ;                                                           
+                end
+                
             end
         end
         
         
-        % ****************************************************************************************************************************************************************
-        % ****************************************************************************************************************************************************************
         
-        % -------------------------------------------------------------------------------------------------
-        % Cari jumlah TRUE dan FALSE serta nilai ENTROPY di Mtraining berdasarkan "Mtraining02UrutSplit_2A"
-        % -------------------------------------------------------------------------------------------------
-        jmlTrueKurangA = 0;
-        jmlFalseKurangA = 0;
-        jmlTrueLebihA = 0;
-        jmlFalseLebihA = 0;    
-        for iKolomCellA = 1 : size(CM1Unique,2)-1 % Iterasi fitur CM1 ada 21 (exclude kelas)
-            for iBarisSplitA = 1 : length(Mtraining02UrutSplit_2A{iFold,iKolomCellA}) % Setiap data split diulang sebanyak jumlah data training (Mtraining biasa -2)
-                for iBarisTrainingA = 1 : length(Mtraining01Urut{iFold,iKolomCellA}) % Iterasi data training agar match dengan satu data split                                      
-                    % -----------------------------------------------------------
-                    % Hitung jumlah TRUE dan FALSE dari kategoti ( <= ) dan ( > )
-                    % -----------------------------------------------------------
-                    dataAwalA = Mtraining01Urut{iFold, iKolomCellA}(iBarisTrainingA,1); % Data training
-                    dataSplitA = Mtraining02UrutSplit_2A{iFold, iKolomCellA}(iBarisSplitA,1); % Data split
-                    dataKelasA = Mtraining01Urut{iFold, iKolomCellA}(iBarisTrainingA,2); % Data kelas                    
-                    if dataAwalA <= dataSplitA % ada berapa data training yang ( <= ) data split                    
-                        if  dataKelasA == 1 % Hitung jumlah TRUE pada parameter ( <= )
-                            jmlTrueKurangA = jmlTrueKurangA + 1; % Hitung jumlah TRUE ( <= )                         
-                        else % Hitung jumlah FALSE pada parameter ( <= )
-                            jmlFalseKurangA = jmlFalseKurangA + 1; % Hitung jumlah FALSE ( <= )
-                        end
-                    else % ada berapa data training yang ( > ) data split
-                        if dataKelasA == 1 % Hitung jumlah TRUE dan FALSE pada parameter ( > )
-                            jmlTrueLebihA = jmlTrueLebihA + 1; % Hitung jumlah TRUE ( > )                        
-                        else
-                            jmlFalseLebihA = jmlFalseLebihA + 1; % Hitung jumlah FALSE ( > )
-                        end
-                    end
-                end    
-                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,2) = jmlTrueKurangA; % Jumlah TRUE dengan parameter ( <= ) disimpan di kolom 2
-                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,3) = jmlFalseKurangA; % Jumlah FALSE dengan parameter ( <= ) disimpan di kolom 3
-                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,5) = jmlTrueLebihA; % Jumlah TRUE dengan parameter ( > ) disimpan di kolom 5
-                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,6) = jmlFalseLebihA; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6                                
-                
-                % ---------------------------------------------
-                % Cari entropy child "2A" dari parameter ( <= )
-                % ---------------------------------------------                       
-                totalKurangA = jmlTrueKurangA + jmlFalseKurangA; % Total jumlah TRUE dan jumlah FALSE dari parameter ( <= )              
-                if totalKurangA ~=0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( <= )
-                    piTrueKurangA(iBarisSplitA,1) = jmlTrueKurangA / (jmlTrueKurangA+jmlFalseKurangA); % Hitung jumlah TRUE ( <= )
-                    piFalseKurangA(iBarisSplitA,1) = jmlFalseKurangA / (jmlTrueKurangA+jmlFalseKurangA); % Hitung jumlah FALSE ( <= )                
-                    if piTrueKurangA(iBarisSplitA,1) == 0 || piFalseKurangA(iBarisSplitA,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild (<=) juga NOL
-                        entropyChildKurangA(iBarisSplitA,1) = 0; % Entropy child ( <= ) dijadikan NOL
-                    else % Jika hasil ( <= ) Pi TRUE dan Pi FALSE bukan NOL                    
-                        % ----------------------------
-                        % Hitung entropy child ( <= )
-                        % ----------------------------
-                        entropyChildKurangA = entropyChildrenEBD(piTrueKurangA,piFalseKurangA,iBarisSplitA);
-                    end                
-                else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( <= ), maka dipastikan entropyChild (<=) juga NOL
-                    entropyChildKurangA(iBarisSplitA,1) = 0; % Entropy child ( <= ) dijadikan NOL
-                end             
-                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,4) = entropyChildKurangA(iBarisSplitA,1); % Nilai entropy child dari parameter ( <= ) disimpan di kolom 4                          
+%         % -------------------
+%         % Coba-coba duplikasi
+%         % -------------------
+%         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+1 , : ) = Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1}) , : );
+%         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+2 , : ) = Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1}) , : );
+%         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+3 , : ) = Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1}) , : );
+%         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+1 , 24 ) = 1;
+%         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+2 , 24 ) = 0;
+%         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+3 , 24 ) = 1;             
 
-                % --------------------------------------------
-                % Cari entropy child "2A" dari parameter ( > )
-                % --------------------------------------------                         
-                totalLebihA = jmlTrueLebihA + jmlFalseLebihA; % Total jumlah TRUE dan jumlah FALSE dari parameter ( > )                        
-                if totalLebihA ~= 0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( > )
-                   piTrueLebihA(iBarisSplitA,1) = jmlTrueLebihA / (jmlTrueLebihA+jmlFalseLebihA); % Hitung jumlah TRUE ( > )
-                   piFalseLebihA(iBarisSplitA,1) = jmlFalseLebihA / (jmlTrueLebihA+jmlFalseLebihA); % Hitung jumlah FALSE ( > )                
-                   if piTrueLebihA(iBarisSplitA,1) == 0 || piFalseLebihA(iBarisSplitA,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild ( > ) juga NOL                   
-                       entropyChildLebihA(iBarisSplitA,1) = 0; % Entropy child ( > ) dijadikan NOL
-                   else % Jika hasil ( > ) Pi TRUE dan Pi FALSE bukan NOL
-                       % ---------------------------
-                       % Hitung entropy child ( > )
-                       % ---------------------------                    
-                       entropyChildLebihA = entropyChildrenEBD(piTrueLebihA, piFalseLebihA,iBarisSplitA);                   
-                   end
-                else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( > )
-                    entropyChildLebihA(iBarisSplitA,1) = 0; % Entropy child ( > ) dijadikan NOL
-                end            
-                Mtraining02UrutSplit_2A{iFold,iKolomCellA}(iBarisSplitA,7) = entropyChildLebihA(iBarisSplitA,1); % Nilai entropy child dari parameter ( > ) disimpan di kolom 7 
-                
-                % ----------------------------------------------------------------------
-                % Di-NOL-kan, karena jumlah TRUE dan FALSE setiap data split itu berbeda
-                % ----------------------------------------------------------------------                
-                jmlTrueKurangA = 0;
-                jmlFalseKurangA = 0;
-                jmlTrueLebihA = 0;
-                jmlFalseLebihA = 0;                                                
-            end              
-        end
         
         
-        % ****************************************************************************************************************************************************************
-        
-        % -------------------------------------------------------------------------------------------------
-        % Cari jumlah TRUE dan FALSE serta nilai ENTROPY di Mtraining berdasarkan "Mtraining02UrutSplit_2B"
-        % -------------------------------------------------------------------------------------------------
-        jmlTrueKurangB = 0;
-        jmlFalseKurangB = 0;
-        jmlTrueLebihB = 0;
-        jmlFalseLebihB = 0;    
-        for iKolomCellB = 1 : size(CM1Unique,2)-1 % Iterasi fitur CM1 ada 21 (exclude kelas)
-            for iBarisSplitB = 1 : length(Mtraining02UrutSplit_2B{iFold,iKolomCellB}) % Setiap data split diulang sebanyak jumlah data training (Mtraining biasa -2)
-                for iBarisTrainingB = 1 : length(Mtraining01Urut{iFold,iKolomCellB}) % Iterasi data training agar match dengan satu data split                                      
-                    % -----------------------------------------------------------
-                    % Hitung jumlah TRUE dan FALSE dari kategoti ( <= ) dan ( > )
-                    % -----------------------------------------------------------
-                    dataAwalB = Mtraining01Urut{iFold, iKolomCellB}(iBarisTrainingB,1); % Data training
-                    dataSplitB = Mtraining02UrutSplit_2B{iFold, iKolomCellB}(iBarisSplitB,1); % Data split
-                    dataKelasB = Mtraining01Urut{iFold, iKolomCellB}(iBarisTrainingB,2); % Data kelas
-                    
-                    if dataAwalB <= dataSplitB % ada berapa data training yang ( <= ) data split                    
-                        if  dataKelasB == 1 % Hitung jumlah TRUE pada parameter ( <= )
-                            jmlTrueKurangB = jmlTrueKurangB + 1; % Hitung jumlah TRUE ( <= )                         
-                        else % Hitung jumlah FALSE pada parameter ( <= )
-                            jmlFalseKurangB = jmlFalseKurangB + 1; % Hitung jumlah FALSE ( <= )
-                        end
-                    else % ada berapa data training yang ( > ) data split
-                        if dataKelasB == 1 % Hitung jumlah TRUE dan FALSE pada parameter ( > )
-                            jmlTrueLebihB = jmlTrueLebihB + 1; % Hitung jumlah TRUE ( > )                        
-                        else
-                            jmlFalseLebihB = jmlFalseLebihB + 1; % Hitung jumlah FALSE ( > )
-                        end
-                    end
-                end    
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,2) = jmlTrueKurangB; % Jumlah TRUE dengan parameter ( <= ) disimpan di kolom 2
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,3) = jmlFalseKurangB; % Jumlah FALSE dengan parameter ( <= ) disimpan di kolom 3
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,5) = jmlTrueLebihB; % Jumlah TRUE dengan parameter ( > ) disimpan di kolom 5
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,6) = jmlFalseLebihB; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6                                
-                
-                % ---------------------------------------------
-                % Cari entropy child "2B" dari parameter ( <= )
-                % ---------------------------------------------                       
-                totalKurangB = jmlTrueKurangB + jmlFalseKurangB; % Total jumlah TRUE dan jumlah FALSE dari parameter ( <= )              
-                if totalKurangB ~=0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( <= )
-                    piTrueKurangB(iBarisSplitB,1) = jmlTrueKurangB / (jmlTrueKurangB+jmlFalseKurangB); % Hitung jumlah TRUE ( <= )
-                    piFalseKurangB(iBarisSplitB,1) = jmlFalseKurangB / (jmlTrueKurangB+jmlFalseKurangB); % Hitung jumlah FALSE ( <= )                
-                    if piTrueKurangB(iBarisSplitB,1) == 0 || piFalseKurangB(iBarisSplitB,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild (<=) juga NOL
-                        entropyChildKurangB(iBarisSplitB,1) = 0; % Entropy child ( <= ) dijadikan NOL
-                    else % Jika hasil ( <= ) Pi TRUE dan Pi FALSE bukan NOL                    
-                        % ----------------------------
-                        % Hitung entropy child ( <= )
-                        % ----------------------------
-                        entropyChildKurangB = entropyChildrenEBD(piTrueKurangB,piFalseKurangB,iBarisSplitB);
-                    end                
-                else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( <= ), maka dipastikan entropyChild (<=) juga NOL
-                    entropyChildKurangB(iBarisSplitB,1) = 0; % Entropy child ( <= ) dijadikan NOL
-                end             
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,4) = entropyChildKurangB(iBarisSplitB,1); % Nilai entropy child dari parameter ( <= ) disimpan di kolom 4                          
+        % -----------------------------------------------------------
+        % Ngambil perbandingan jumlah T dan F dari data yang redundan
+        % -----------------------------------------------------------
+%         counter = 0;            
+%         for iKolomKelas = 1 : size(CM1Unique,2)-1 % 21
+%             for iBarisKelas = 1 : length(Mtraining05UniqueBiner_2{iFold,1}) % Data Unique biner                                                            
+%                 for iBarisCari = 1 : length(Mtraining04Biner_ALL{iFold,1}) % Data biner                                                                                                
+%                     if Mtraining05UniqueBiner_2{iFold,iKolomKelas}(iBarisKelas,:) == Mtraining04Biner_ALL{iFold,iKolomKelas}(iBarisCari,:) % cek tanpa kelas                                                                                                    
+%                         counter = counter + 1;                                                       
+%                         hasilDuplikasi{iFold,1}(counter,:) = [iFold iBarisKelas iBarisCari];    
+%                         %Mtraining05UniqueBiner_2{iFold,1}(iBarisCari,:)
+%                     end                                             
+%                 end
+%             end
+%         end
+            
 
-                % --------------------------------------------
-                % Cari entropy child "2B" dari parameter ( > )
-                % --------------------------------------------                         
-                totalLebihB = jmlTrueLebihB + jmlFalseLebihB; % Total jumlah TRUE dan jumlah FALSE dari parameter ( > )                        
-                if totalLebihB ~= 0 % Selama total jumlah TRUE dan FALSE bukan NOL pada parameter ( > )
-                   piTrueLebihB(iBarisSplitB,1) = jmlTrueLebihB / (jmlTrueLebihB+jmlFalseLebihB); % Hitung jumlah TRUE ( > )
-                   piFalseLebihB(iBarisSplitB,1) = jmlFalseLebihB / (jmlTrueLebihB+jmlFalseLebihB); % Hitung jumlah FALSE ( > )                
-                   if piTrueLebihB(iBarisSplitB,1) == 0 || piFalseLebihB(iBarisSplitB,1) == 0 % Jika hasil Pi TRUE atau Pi FALSE itu NOL, dipastikan entropyChild ( > ) juga NOL                   
-                       entropyChildLebihB(iBarisSplitB,1) = 0; % Entropy child ( > ) dijadikan NOL
-                   else % Jika hasil ( > ) Pi TRUE dan Pi FALSE bukan NOL
-                       % ---------------------------
-                       % Hitung entropy child ( > )
-                       % ---------------------------                    
-                       entropyChildLebihB = entropyChildrenEBD(piTrueLebihB, piFalseLebihB,iBarisSplitB);                   
-                   end
-                else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( > )
-                    entropyChildLebihB(iBarisSplitB,1) = 0; % Entropy child ( > ) dijadikan NOL
-                end            
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,7) = entropyChildLebihB(iBarisSplitB,1); % Nilai entropy child dari parameter ( > ) disimpan di kolom 7                                 
-                
-                % ----------------------------------------------------------------------
-                % Di-NOL-kan, karena jumlah TRUE dan FALSE setiap data split itu berbeda
-                % ----------------------------------------------------------------------
-                jmlTrueKurangB = 0;
-                jmlFalseKurangB = 0;
-                jmlTrueLebihB = 0;
-                jmlFalseLebihB = 0;                                
-            end                    
-        end                
-        % ****************************************************************************************************************************************************************
-        % ****************************************************************************************************************************************************************                
+        
+        
     %--- 
     else
-        disp(iFold);
-        disp('joss');
+%         for iKolomReady = 1 : size(CM1Unique,2) % 22
+%             for iBarisReady = 1 : keteranganCM1(iFold,2) % Training 401
+%                 for iKolomDataReady = 1 : size(Mtraining05UniqueBiner_1,2)
+%                     Mtraining06Ready{iFold,iKolomReady}(iBarisReady,iKolomDataReady) = Mtraining05UniqueBiner_1{iFold,iKolomReady}(iBarisReady,iKolomDataReady);
+%                 end                
+%             end            
+%         end        
+        disp(iFold);        
     end            
 end
 
@@ -488,6 +435,8 @@ clear Nilai BarisKe angkaSplit;
 
 clear iKolomDiskrit iBarisDiskrit dataKelasnya;
 
+clear uniqueDenganKelas uniqueTanpaKelas;
+
 clear iKolomSplit iDataSplit hasilSplitKedua splitPertama A B dataPertama dataKedua hasilSplitKedua Mtraining02UrutSplit_2;
 
 clear jmlTrueKurangA jmlFalseKurangA jmlTrueLebihA jmlFalseLebihA totalLebihA totalKurangA;
@@ -502,14 +451,18 @@ clear entropyChildKurangB entropyChildLebihB;
 clear iKolomCellB iBarisSplitB iBarisTrainingB;
 clear dataAwalB dataSplitB dataKelasB;
 
+clear angkaSplitA angkaSplitB BarisKeA BarisKeB;
+clear dataChildKurangA dataChildKurangB dataChildLebihA dataChildLebihB;
+clear GAINinfoA GAINinfoB INFOsplitA INFOsplitB NilaiA NilaiB;
+
+clear iBarisDiskrit2A iBarisDiskrit2B iKolomDiskrit2A iKolomDiskrit2B;
+clear nilaiSplit2A nilaiSplit2B;
+
+clear dataA dataB iBaris iBarisBiner iBarisCari iBarisKelas counter;
+clear iKolom iKolomArray iKolomData uniqueBinerAllDenganKelas uniqueBinerAllTanpaKelas totalFitur;
+
 clear jumlahDataUniqueTanpaKelas;
 
 clear iFold cvFolds k testIdx vektorCM1;
 
 toc
-
-
-
-
-
-
