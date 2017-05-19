@@ -116,27 +116,7 @@
             [NilaiB,BarisKeB] = max(Mtraining02UrutSplit_2B{iFold,iKolomCellB}(:,9)); % Ambil urutan ke berapa si split terbaik itu dan ambil nilai max gain-nya
             angkaSplitB = Mtraining02UrutSplit_2B{iFold, iKolomCellB}(BarisKeB,1); % Angka split terbaik dari daftar urut split
             Mtraining03BestSplit_2B{iFold,iKolomCellB} = [BarisKeB angkaSplitB NilaiB]; % nilai max Gain dari data split ke berapa                           
-        end      
-        
-        % ----------------------------------------------------------------------------------------
-        % Diskritisasi data numerik (Training) berdasakan best split ( <= , > ) pada "BestSplit2B"
-        % ----------------------------------------------------------------------------------------
-        for iKolomDiskrit2B = 1 : size(CM1Unique,2)-1 % 1 : 21
-            for iBarisDiskrit2B = 1 : keteranganCM1(iFold,2) % 1 : jumlah training dari setiap fold                                
-                % ----------------------------------------------------------------------
-                % kalau data di array metrik kurang dari sama dengan kriteria EBD ( <= )
-                % ----------------------------------------------------------------------
-                nilaiSplit2B = Mtraining03BestSplit_2B{iFold,iKolomDiskrit2B}(1,2); % Untuk ambil nilai max gain ke berapa
-                if Mtraining{iFold, iKolomDiskrit2B}(iBarisDiskrit2B,1) <= nilaiSplit2B 
-                    Mtraining04Biner_2AB{iFold,iKolomDiskrit2B}(iBarisDiskrit2B,2) = 0; % Kolom 2 adalah hasil 2B
-                % --------------------------------------------------------
-                % kalau data di array metrik lebih dari kriteria EBD ( > )
-                % --------------------------------------------------------
-                else                
-                    Mtraining04Biner_2AB{iFold,iKolomDiskrit2B}(iBarisDiskrit2B,2) = 1; % Kolom 2 adalah hasil 2B
-                end                                 
-            end           
-        end
+        end              
                
 % OUTPUT:
 % --------
@@ -144,6 +124,4 @@
 % Nilai INFO dari setiap data split di FITUR dan FOLD tertentu
 % Nilai GAIN dari setiap INFO di FITUR dan FOLD tertentu
 % "Mtraining02UrutSplit_2B" dengan total 9 kolom
-% Nilai Gain (MAX) sebagai split terbaik "Mtraining03BestSplit_2B"
-% Konversi TRAINING ke data BINER berdasarkan kriteria "Mtraining03BestSplit_2B"
-% Hasil akhir adalah "Mtraining04Biner_2AB"        
+% Nilai Gain (MAX) sebagai split terbaik "Mtraining03BestSplit_2B"        

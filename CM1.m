@@ -34,6 +34,10 @@ for iFold = 1:k
     testIdx  = (cvFolds == iFold);                
     trainIdx(:,iFold) = ~testIdx;    
             
+%==================================================================================================================================
+%                                           *********** EBD FASE 1 ***********
+%==================================================================================================================================
+    
     % -----------------------------------------------------------------
     % Menghitung jumlah training, testing, kelas true, dan kelas false
     % -----------------------------------------------------------------
@@ -64,12 +68,11 @@ for iFold = 1:k
     % [1] Testing, [2] Training, [3] TRUE, [4] FALSE, [5] Entropy Parent
     % -------------------------------------------------------------------
     keteranganCM1(iFold,:) = [jmlTesting(iFold,:) jmlTraining(iFold,:) jmlTrue(iFold,:) jmlFalse(iFold,:) entropyParent(iFold,:)];
-
         
     % ------------------------------------------------------------
     % Mengisi data metrik Mtraining dan Mtesting (fitur dan kelas)
     % ------------------------------------------------------------
-    for iKolomCell = 1 : size(CM1Unique,2)-1 % Iterasi kolom cell berdasarkan jumlah fitur-1
+    for iKolomCell = 1 : 21 % Iterasi kolom cell berdasarkan jumlah fitur (exclude kelas)
         % -------------------------------------------------------------------------------
         % iTraining dan iTesting = nge-set nilai metrik array ke berapa untuk ngisi data 
         % -------------------------------------------------------------------------------
@@ -90,19 +93,18 @@ for iFold = 1:k
             end
         end        
     end
-
     
     % ---------------------------------------------------------------------------
     % Split data training dengan cara dijumlah berdasarkan urutan dan dibagi dua
     % ---------------------------------------------------------------------------
-    for iKolomCell = 1 : size(CM1Unique,2)-1 % Iterasi fitur CM1 ada 21 (exclude kelas)
+    for iKolomCell = 1 : 21 % Iterasi fitur CM1 ada 21 (exclude kelas)
         for iDataTraining = 1 : keteranganCM1(iFold, 2)-1 % Looping berdasarkan data jumlah TRAINING dari tabel "keteranganCM1" dikurangi 1
             dataPertama = Mtraining01Urut{iFold,iKolomCell}(iDataTraining,1); % Urutan data untuk split
             dataKedua = Mtraining01Urut{iFold,iKolomCell}(iDataTraining+1,1); % Urutan data untuk split
             Mtraining02UrutSplit_1 {iFold,iKolomCell}(iDataTraining,1) = (dataPertama+dataKedua)/2; % Ditambah dan dibagi dua, nilainya disimpan di kolom 1           
         end            
     end    
-    
+        
     % -------------------------------------------------------------------------------------------------------
     % Cari jumlah TRUE dan FALSE serta nilai ENTROPY children di Mtraining berdasarkan Mtraining02UrutSplit_1
     % -------------------------------------------------------------------------------------------------------
@@ -110,7 +112,7 @@ for iFold = 1:k
     jmlFalseKurang = 0;
     jmlTrueLebih = 0;
     jmlFalseLebih = 0;    
-    for iKolomCell = 1 : size(CM1Unique,2)-1 % Iterasi fitur CM1 ada 21 (exclude kelas)
+    for iKolomCell = 1 : 21 % Iterasi fitur CM1 ada 21 (exclude kelas)
         for iBarisSplit = 1 : length(Mtraining02UrutSplit_1{iFold,iKolomCell}) % Setiap data split diulang sebanyak jumlah data training
             for iBarisTraining = 1 : length(Mtraining01Urut{iFold,iKolomCell}) % Iterasi data training agar match dengan satu data split                  
                 % -----------------------------------------------------------
@@ -216,7 +218,7 @@ for iFold = 1:k
     % ---------------------------------------------------------------------
     % Diskritisasi data numerik (Training) berdasakan best split ( <= , > )
     % ---------------------------------------------------------------------
-    for iKolomDiskrit = 1 : size(CM1Unique,2)-1 % 1 : 21
+    for iKolomDiskrit = 1 : 21 % Iterasi fitur exclude kelas
         for iBarisDiskrit = 1 : keteranganCM1(iFold,2) % 1 : jumlah training dari setiap fold            
             % ---------------------------------------------------------------
             % kalau data TRAINING kurang dari sama dengan kriteria EBD ( <= )
@@ -232,7 +234,7 @@ for iFold = 1:k
             % -----------------------------------------------------
             % Menambahkan kolom kelas ke Mtraining04Biner_1
             % -----------------------------------------------------
-            if iKolomDiskrit == size(CM1Unique,2)-1 %21              
+            if iKolomDiskrit == 21 %Fitur ke 21              
                 dataKelasnya = Mtraining{iFold,iKolomDiskrit}(iBarisDiskrit,2); % ambil data kelas dari Mtraining
                 Mtraining04Biner_1{iFold,1}(iBarisDiskrit,iKolomDiskrit+1) = dataKelasnya; % data kelas disimpan di kolom ke 22
             end                                    
@@ -253,9 +255,13 @@ for iFold = 1:k
         hasilEBD(iFold,:) = [iFold uniqueTanpaKelas length(Mtraining05UniqueBiner_1{iFold,1})] ; % Perbandingan jumlah unique DENGAN dan TANPA kelas                    
     %---
     
-        % --------------------------------
-        % Perlu dilakukan split EBD 2 fase
-        % --------------------------------               
+%==================================================================================================================================
+%                                           *********** EBD FASE 2 ***********
+%==================================================================================================================================    
+    
+        % -------------------------------------------------------
+        % Split data split EBD fase 1 menjadi fase 2A dan fase 2B
+        % -------------------------------------------------------               
         for iKolomSplit = 1 : length(Mtraining02UrutSplit_1) % Iterasi kolom, ada 21
             A = 1; % Untuk parameter <=
             B = 1; % Untuk parameter >
@@ -267,8 +273,7 @@ for iFold = 1:k
                 % ----------------------------------------------------------------------------------
                 % Cek masuk ke kategori <= atau kategori > berdasarkan MtrainingBestSplit sebelumnya
                 % ----------------------------------------------------------------------------------
-                splitPertama = Mtraining03BestSplit_1{iFold,iKolomSplit}(1,2); % Ambil nilai split dari fase pertama
-                
+                splitPertama = Mtraining03BestSplit_1{iFold,iKolomSplit}(1,2); % Ambil nilai split dari fase pertama                
                 if hasilSplitKedua <= splitPertama % Kalau nilai split FASE 2 <= split FASE 1
                     Mtraining02UrutSplit_2A{iFold, iKolomSplit}(A,1) = hasilSplitKedua; % Masuk kategori A
                     A = A + 1;
@@ -283,8 +288,7 @@ for iFold = 1:k
             % maka kategori ( > ) tidak ada datanya
             if length(Mtraining02UrutSplit_2B{iFold,iKolomSplit}) == 0
                 Mtraining02UrutSplit_2B{iFold,iKolomSplit}(iDataSplit,:) = [0,0,0,0,0,0,0,0,0];
-            end
-            
+            end            
         end
                 
         % ---------------------------------------------
@@ -301,10 +305,7 @@ for iFold = 1:k
         % ------------------------------------------------------------
 %2      % Mencari nilai GAIN (max) dari setiap FOLD dan FITUR:
         % "Mtraining03BestSplit_2A" --> [barisKe,angkaSplit,nilaiGain]            
-        % -------------------------------------------------------------------------------------------------------
-%3      % Konversi data TRAINING menjadi data BINER berdasarkan angka SPLIT TERBAIK di "Mtraining03BestSplit_2A":
-        % Nilai BINER disimpan di "Mtraining04Biner_2AB" --> [biner2A,biner2B]
-        % -------------------------------------------------------------------------------------------------------
+        % ------------------------------------------------------------
         fase_2A;        
                 
         % ---------------------------------------------
@@ -321,56 +322,106 @@ for iFold = 1:k
         % ------------------------------------------------------------
 %5      % Mencari nilai GAIN (max) dari setiap FOLD dan FITUR:
         % "Mtraining03BestSplit_2B" --> [barisKe,angkaSplit,nilaiGain]                                
-        % -------------------------------------------------------------------------------------------------------
-%6      % Konversi data TRAINING menjadi data BINER berdasarkan angka SPLIT TERBAIK di "Mtraining03BestSplit_2B":
-        % Nilai BINER disimpan di "Mtraining04Biner_2AB" --> [biner2A,biner2B]
-        % -------------------------------------------------------------------------------------------------------
+        % ------------------------------------------------------------
         fase_2B;        
-                                
+                                        
+        % ------------------------------------
+        % Hasil BINER dan HEXA dari EBD 2 FASE
+        % ------------------------------------
+        for iKolomFold = 1 : 21
+            for iBaris = 1 : keteranganCM1(iFold,2) % Banyaknya data training
+                for iFitur = 1 : 21                    
+                    trainingSekarang = Mtraining{iFold,iFitur}(iBaris,1);
+                    split1 = Mtraining03BestSplit_1{iFold,iFitur}(1,2);
+                    split2A = Mtraining03BestSplit_2A{iFold, iFitur}(1,2);
+                    split2B = Mtraining03BestSplit_2B{iFold, iFitur}(1,2);
+                    kelasnya = Mtraining{iFold, iFitur}(iBaris,2);                    
+                    if iFitur == iKolomFold % apakah kolom yang ingin dituju? (dijadikan 2 digit)
+                        if trainingSekarang <= split1 % <= split 1                            
+                            if trainingSekarang <= split2A % <= split 2A                                
+                                Mtraining04Biner_2{iFold,iKolomFold}{iBaris,iFitur}(:,:) = [0,0];     
+                                Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,iFitur) = 0;
+                            else % > split 2A                                
+                                Mtraining04Biner_2{iFold,iKolomFold}{iBaris,iFitur}(:,:) = [0,1];
+                                Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,iFitur) = 1;
+                            end                            
+                        else % > split 1
+                            if trainingSekarang <= split2B % <= split 2B
+                                Mtraining04Biner_2{iFold,iKolomFold}{iBaris,iFitur}(:,:) = [1,0];
+                                Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,iFitur) = 2;
+                            else % > split 2B
+                                Mtraining04Biner_2{iFold,iKolomFold}{iBaris,iFitur}(:,:) = [1,1];           
+                                Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,iFitur) = 3;
+                            end                             
+                        end 
+                        if iFitur == 21 % nambahin kelas                            
+                            Mtraining04Biner_2{iFold,iKolomFold}{iBaris,22} = kelasnya;
+                            Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,22) = kelasnya;
+                            Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,23) = iBaris;
+                        end 
+                    else % Bukan fitur yang dituju
+                        if trainingSekarang <= split1 % <= split 1
+                            Mtraining04Biner_2{iFold,iKolomFold}{iBaris,iFitur} = [0];
+                            Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,iFitur) = 0;
+                        else % > split 1
+                            Mtraining04Biner_2{iFold,iKolomFold}{iBaris,iFitur} = [1];                  
+                            Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,iFitur) = 1;
+                        end                        
+                        if iFitur == 21 % nambahin kelas                            
+                            Mtraining04Biner_2{iFold,iKolomFold}{iBaris,22} = kelasnya;
+                            Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,22) = kelasnya;
+                            Mtraining04Biner_2HEX{iFold,iKolomFold}(iBaris,23) = iBaris;
+                        end                        
+                    end % iFitur == iKolomFold                    
+                end % iFitur                
+            end % iBaris                        
+            
+            % -------------------------------------
+            % Remove redundansi biner di EBD 2 FASE
+            % -------------------------------------
+            Mtraining05UniqueHEX_2{iFold,iKolomFold} = unique(Mtraining04Biner_2HEX{iFold,iKolomFold}(:,1:22),'rows');                      
+            
+            % ---------------------------------------------------
+            % Cari perbandingan Unique HEX dengan dan tanpa kelas
+            % ---------------------------------------------------
+            uniqueHEXdenganKelas = length(Mtraining05UniqueHEX_2{iFold,iKolomFold}); % jumlah unique dengan kelasnya juga
+            uniqueHEXtanpaKelas = length(unique(Mtraining04Biner_2HEX{iFold,iKolomFold}(:,1:21),'rows')); % Data unique tanpa kelas
+            if  uniqueHEXdenganKelas ~= uniqueHEXtanpaKelas % Data unique tanpa kelas ~= data unique                 
+                hasilEBD_2{iFold,iKolomFold} = [iFold uniqueHEXtanpaKelas uniqueHEXdenganKelas] ;
+            end                         
+        end %iKolomFold      
         
-        % --------------------------------------------------------------------
-        % Cloning "Mtraining04Biner_1" exclude KELAS ke "Mtraining04Biner_ALL"
-        % --------------------------------------------------------------------
-        for iKolom = 1 : size(CM1Unique,2)-1 % 1 : 21 [array]
-            for iBaris = 1 : keteranganCM1(iFold,2) % banyaknya data training berdasarkan setiap fold                                                                   
-                for iKolomData = 1 : size(CM1Unique,2)-1 % 1 : 21 [metrik]                
-                    Mtraining04Biner_ALL{iFold,iKolom}(iBaris,iKolomData) = Mtraining04Biner_1{iFold,1}(iBaris, iKolomData);                                     
-                end                              
+        % -------------------------------------------
+        % Mtraining dibandingkan dengan Mtraining_HEX
+        % -------------------------------------------
+        for iKolomFold = 1 : 21            
+            for iBarisTraining = 1 : keteranganCM1(iFold,2)   % 400
+                c = 0;
+                d = 1;
+                e = 1;
+                
+                for iBarisCek = 1 : keteranganCM1(iFold,2) % 400                          
+                    c  = c + 1;
+                    dataTraining = Mtraining04Biner_2HEX{iFold,iKolomFold}(iBarisTraining,1:22);
+                    dataCek = Mtraining04Biner_2HEX{iFold,iKolomFold}(iBarisCek,1:22);
+                    if dataTraining == dataCek                        
+                        Mtraining06RedudansiKelas{iFold,iKolomFold}{iBarisTraining,:}(d,:) = [c Mtraining{iFold,iKolomFold}(c,1) Mtraining03BestSplit_1{iFold,iKolomFold}(1,2) Mtraining03BestSplit_2A{iFold,iKolomFold}(1,2) Mtraining03BestSplit_2B{iFold,iKolomFold}(1,2) Mtraining{iFold,iKolomFold}(c,2)] ;
+                        d = d + 1;                                                
+                    end  
+                    
+                    dataTrainingNon = Mtraining04Biner_2HEX{iFold,iKolomFold}(iBarisTraining,1:21);
+                    dataCekNon = Mtraining04Biner_2HEX{iFold,iKolomFold}(iBarisCek,1:21);
+                    if dataTrainingNon == dataCekNon                        
+                        Mtraining06RedudansiNonKelas{iFold,iKolomFold}{iBarisTraining,:}(e,:) = [c Mtraining{iFold,iKolomFold}(c,1) Mtraining03BestSplit_1{iFold,iKolomFold}(1,2) Mtraining03BestSplit_2A{iFold,iKolomFold}(1,2) Mtraining03BestSplit_2B{iFold,iKolomFold}(1,2) Mtraining{iFold,iKolomFold}(c,2)]; 
+                        e = e + 1;                                                
+                    end
+                    
+                end                                     
             end
         end
         
-        % ----------------------------------------------------------------------------------------
-        % Penggabungan biner FASE 1 dengan biner FASE 2 (A dan B), berdasarkan masing-masing fitur
-        % ----------------------------------------------------------------------------------------
-        totalFitur = size(CM1Unique,2)-1; % 21
-        for iKolomArray = 1 : totalFitur % 1 : 21
-            for iBarisBiner = 1 : keteranganCM1(iFold,2) % banyaknya data training berdasarkan setiap fold  
-                dataA = Mtraining04Biner_2AB{iFold,iKolomArray}(iBarisBiner,1); % Nilai biner A
-                dataB = Mtraining04Biner_2AB{iFold,iKolomArray}(iBarisBiner,2); % Nilai biner B                     
-                Mtraining04Biner_ALL{iFold,iKolomArray}(iBarisBiner,totalFitur+1) = dataA; % A disimpan di kolom 22
-                Mtraining04Biner_ALL{iFold,iKolomArray}(iBarisBiner,totalFitur+2) = dataB; % B disimpan di kolom 23      
-                Mtraining04Biner_ALL{iFold,iKolomArray}(iBarisBiner,totalFitur+3) = Mtraining04Biner_1{iFold,1}(iBarisBiner, 22); % KELAS disimpan di kolom 24
-                
-                % -----------------------------------------------------------------
-                % Distinct data "Mtraining04Biner_ALL" (SEMUA fitur TERMASUK kelas)
-                % -----------------------------------------------------------------
-                Mtraining05UniqueBiner_2{iFold,iKolomArray} = unique(Mtraining04Biner_ALL{iFold,iKolomArray},'rows'); % Data redundan diseleksi (include kelas)               
-                
-                % ---------------------------------------------------------------------------------------------------------------------------------------
-                % Jika masih ada duplikasi pada "Mtraining05UniqueBiner_2" TANPA kelas, maka bisa dipastikan ada duplikasi data dengan kelas yang berbeda
-                % ---------------------------------------------------------------------------------------------------------------------------------------                                         
-                uniqueBinerAllDenganKelas = length(Mtraining05UniqueBiner_2{iFold,iKolomArray}); % jumlah unique dengan kelasnya juga
-                uniqueBinerAllTanpaKelas = length(unique(Mtraining05UniqueBiner_2{iFold,iKolomArray}(:,1:23),'rows')); % Jumlah unique tanpa kelas                
-                                    
-                if  uniqueBinerAllTanpaKelas ~= uniqueBinerAllDenganKelas % Data unique tanpa kelas ~= data unique
-                    hasilEBD_2{iFold,iKolomArray}( 1 ,:) = [uniqueBinerAllTanpaKelas length(Mtraining05UniqueBiner_2{iFold,iKolomArray})] ;                                                           
-                end
-                
-            end
-        end
         
-        
-        
+                      
 %         % -------------------
 %         % Coba-coba duplikasi
 %         % -------------------
@@ -380,9 +431,7 @@ for iFold = 1:k
 %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+1 , 24 ) = 1;
 %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+2 , 24 ) = 0;
 %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+3 , 24 ) = 1;             
-
-        
-        
+                
         % -----------------------------------------------------------
         % Ngambil perbandingan jumlah T dan F dari data yang redundan
         % -----------------------------------------------------------
@@ -460,6 +509,8 @@ clear nilaiSplit2A nilaiSplit2B;
 
 clear dataA dataB iBaris iBarisBiner iBarisCari iBarisKelas counter;
 clear iKolom iKolomArray iKolomData uniqueBinerAllDenganKelas uniqueBinerAllTanpaKelas totalFitur;
+
+clear iFitur iKolomFold kelasnya split1 split2A split2B trainingSekarang uniqueHEXdenganKelas uniqueHEXtanpaKelas;
 
 clear jumlahDataUniqueTanpaKelas;
 
