@@ -4,7 +4,7 @@
 % Jumlah BARIS data "Mtraining02UrutSplit_2B" pada FITUR dan FOLD tertentu
 % Jumlah BARIS data "Mtraining01Urut" pada setiap FITUR dan FOLD tertentu
 % Data "Mtraining01Urut" di setiap FITUR dan FOLD
-% Data "Mtraining02UrutSplit_2B" yaitu data split FASE 2 setiap FITUR dan FOLD
+% Data "Mtraining02UrutSplitDistinct_2B" yaitu data split FASE 2 setiap FITUR dan FOLD
 
 
         % ----------------------------------------------------------------------------------------------------------
@@ -15,13 +15,13 @@
         jmlTrueLebihB = 0;
         jmlFalseLebihB = 0;    
         for iKolomCellB = 1 : size(CM1Unique,2)-1 % Iterasi fitur CM1 ada 21 (exclude kelas)
-            for iBarisSplitB = 1 : length(Mtraining02UrutSplit_2B{iFold,iKolomCellB}) % Setiap data split diulang sebanyak jumlah data training (Mtraining biasa -2)
+            for iBarisSplitB = 1 : length(Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}) % Setiap data split diulang sebanyak jumlah data training (Mtraining biasa -2)
                 for iBarisTrainingB = 1 : length(Mtraining01Urut{iFold,iKolomCellB}) % Iterasi data training agar match dengan satu data split                                      
                     % -----------------------------------------------------------
                     % Hitung jumlah TRUE dan FALSE dari kategoti ( <= ) dan ( > )
                     % -----------------------------------------------------------
                     dataAwalB = Mtraining01Urut{iFold, iKolomCellB}(iBarisTrainingB,1); % Data training
-                    dataSplitB = Mtraining02UrutSplit_2B{iFold, iKolomCellB}(iBarisSplitB,1); % Data split
+                    dataSplitB = Mtraining02UrutSplitDistinct_2B{iFold, iKolomCellB}(iBarisSplitB,1); % Data split
                     dataKelasB = Mtraining01Urut{iFold, iKolomCellB}(iBarisTrainingB,2); % Data kelas
                     
                     if dataAwalB <= dataSplitB % ada berapa data training yang ( <= ) data split                    
@@ -38,10 +38,10 @@
                         end
                     end
                 end    
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,2) = jmlTrueKurangB; % Jumlah TRUE dengan parameter ( <= ) disimpan di kolom 2
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,3) = jmlFalseKurangB; % Jumlah FALSE dengan parameter ( <= ) disimpan di kolom 3
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,5) = jmlTrueLebihB; % Jumlah TRUE dengan parameter ( > ) disimpan di kolom 5
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,6) = jmlFalseLebihB; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6                                
+                Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(iBarisSplitB,2) = jmlTrueKurangB; % Jumlah TRUE dengan parameter ( <= ) disimpan di kolom 2
+                Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(iBarisSplitB,3) = jmlFalseKurangB; % Jumlah FALSE dengan parameter ( <= ) disimpan di kolom 3
+                Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(iBarisSplitB,5) = jmlTrueLebihB; % Jumlah TRUE dengan parameter ( > ) disimpan di kolom 5
+                Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(iBarisSplitB,6) = jmlFalseLebihB; % Jumlah FALSE dengan parameter ( > ) disimpan di kolom 6                                
                 
                 % ---------------------------------------------
                 % Cari entropy child "2B" dari parameter ( <= )
@@ -61,7 +61,7 @@
                 else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( <= ), maka dipastikan entropyChild (<=) juga NOL
                     entropyChildKurangB(iBarisSplitB,1) = 0; % Entropy child ( <= ) dijadikan NOL
                 end             
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,4) = entropyChildKurangB(iBarisSplitB,1); % Nilai entropy child dari parameter ( <= ) disimpan di kolom 4                          
+                Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(iBarisSplitB,4) = entropyChildKurangB(iBarisSplitB,1); % Nilai entropy child dari parameter ( <= ) disimpan di kolom 4                          
 
                 % --------------------------------------------
                 % Cari entropy child "2B" dari parameter ( > )
@@ -81,7 +81,7 @@
                 else % Jika total jumlah TRUE dan FALSE adalah NOL pada parameter ( > )
                     entropyChildLebihB(iBarisSplitB,1) = 0; % Entropy child ( > ) dijadikan NOL
                 end            
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,7) = entropyChildLebihB(iBarisSplitB,1); % Nilai entropy child dari parameter ( > ) disimpan di kolom 7                                 
+                Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(iBarisSplitB,7) = entropyChildLebihB(iBarisSplitB,1); % Nilai entropy child dari parameter ( > ) disimpan di kolom 7                                 
                 
                 % ----------------------------------------------------------------------
                 % Di-NOL-kan, karena jumlah TRUE dan FALSE setiap data split itu berbeda
@@ -94,16 +94,16 @@
                 % -----------------------------------------
                 % Mencari nilai INFO dari setiap data split
                 % -----------------------------------------
-                dataChildKurangB = (totalKurangB/keteranganCM1(iFold,2)) * Mtraining02UrutSplit_2B{iFold, iKolomCellB}(iBarisSplitB,4);
-                dataChildLebihB = (totalLebihB/keteranganCM1(iFold,2)) * Mtraining02UrutSplit_2B{iFold, iKolomCellB}(iBarisSplitB,7);
+                dataChildKurangB = (totalKurangB/keteranganCM1(iFold,2)) * Mtraining02UrutSplitDistinct_2B{iFold, iKolomCellB}(iBarisSplitB,4);
+                dataChildLebihB = (totalLebihB/keteranganCM1(iFold,2)) * Mtraining02UrutSplitDistinct_2B{iFold, iKolomCellB}(iBarisSplitB,7);
                 INFOsplitB(iBarisSplitB,1) = (dataChildKurangB + dataChildLebihB);
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,8) = INFOsplitB(iBarisSplitB,1); % nilai INFO dari data SPLIT. disimpan di kolom 8
+                Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(iBarisSplitB,8) = INFOsplitB(iBarisSplitB,1); % nilai INFO dari data SPLIT. disimpan di kolom 8
 
                 % ------------------------------------
                 % Mencari nilai GAIN dari setiap INFO
                 % ------------------------------------
                 GAINinfoB(iBarisSplitB,1) = keteranganCM1(iFold,5) - INFOsplitB(iBarisSplitB,1);
-                Mtraining02UrutSplit_2B{iFold,iKolomCellB}(iBarisSplitB,9) = GAINinfoB(iBarisSplitB,1); % nilai INFO dari data SPLIT. disimpan di kolom 9                        
+                Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(iBarisSplitB,9) = GAINinfoB(iBarisSplitB,1); % nilai INFO dari data SPLIT. disimpan di kolom 9                        
 
                 % ----------------------------------------------------------------------------------------------------------------------------
                 % Penyederhanaan variable "Mtraining02UrutSplit_2B" 
@@ -113,8 +113,8 @@
             % ---------------------------------------------------------------
             % Mencari nilai best split berdasarkan nilai GAIN tertinggi (max)
             % ---------------------------------------------------------------
-            [NilaiB,BarisKeB] = max(Mtraining02UrutSplit_2B{iFold,iKolomCellB}(:,9)); % Ambil urutan ke berapa si split terbaik itu dan ambil nilai max gain-nya
-            angkaSplitB = Mtraining02UrutSplit_2B{iFold, iKolomCellB}(BarisKeB,1); % Angka split terbaik dari daftar urut split
+            [NilaiB,BarisKeB] = max(Mtraining02UrutSplitDistinct_2B{iFold,iKolomCellB}(:,9)); % Ambil urutan ke berapa si split terbaik itu dan ambil nilai max gain-nya
+            angkaSplitB = Mtraining02UrutSplitDistinct_2B{iFold, iKolomCellB}(BarisKeB,1); % Angka split terbaik dari daftar urut split
             Mtraining03BestSplit_2B{iFold,iKolomCellB} = [BarisKeB angkaSplitB NilaiB]; % nilai max Gain dari data split ke berapa                           
         end              
                
