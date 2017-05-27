@@ -480,7 +480,7 @@ for iFold = 1:k
         % -------------------------------------------
         % Mtraining dibandingkan dengan Mtraining_HEX
         % -------------------------------------------
-        for iKolomFold = 1 : 21            
+        for iKolomFoldCek = 1 : 21            
             for iBarisTraining = 1 : keteranganCM1(iFold,2)
                 c = 0;
                 d = 1;
@@ -489,55 +489,23 @@ for iFold = 1:k
                 for iBarisCek = 1 : keteranganCM1(iFold,2)                          
                     c  = c + 1;
                     
-                    dataHEX = Mtraining10Biner_2HEX{iFold,iKolomFold}(iBarisTraining,1:22);
-                    dataCek = Mtraining10Biner_2HEX{iFold,iKolomFold}(iBarisCek,1:22);
+                    dataHEX = Mtraining10Biner_2HEX{iFold,iKolomFoldCek}(iBarisTraining,1:22);
+                    dataCek = Mtraining10Biner_2HEX{iFold,iKolomFoldCek}(iBarisCek,1:22);
                     if dataHEX == dataCek                        
-                        Mtraining12RedudansiKelas{iFold,iKolomFold}{iBarisTraining,:}(d,:) = [c Mtraining{iFold,iKolomFold}(c,1) Mtraining03BestSplit_1{iFold,iKolomFold}(1,2) Mtraining09BestSplit_2A{iFold,iKolomFold}(1,2) Mtraining09BestSplit_2B{iFold,iKolomFold}(1,2) Mtraining{iFold,iKolomFold}(c,2)] ;
+                        Mtraining12RedudansiKelas{iFold,iKolomFoldCek}{iBarisTraining,:}(d,:) = [c Mtraining{iFold,iKolomFoldCek}(c,1) Mtraining03BestSplit_1{iFold,iKolomFoldCek}(1,2) Mtraining09BestSplit_2A{iFold,iKolomFold}(1,2) Mtraining09BestSplit_2B{iFold,iKolomFold}(1,2) Mtraining{iFold,iKolomFold}(c,2)] ;
                         d = d + 1;                                                
                     end  
                     
-                    dataTrainingNon = Mtraining10Biner_2HEX{iFold,iKolomFold}(iBarisTraining,1:21);
-                    dataCekNon = Mtraining10Biner_2HEX{iFold,iKolomFold}(iBarisCek,1:21);
+                    dataTrainingNon = Mtraining10Biner_2HEX{iFold,iKolomFoldCek}(iBarisTraining,1:21);
+                    dataCekNon = Mtraining10Biner_2HEX{iFold,iKolomFoldCek}(iBarisCek,1:21);
                     if dataTrainingNon == dataCekNon                        
-                        Mtraining12RedudansiNonKelas{iFold,iKolomFold}{iBarisTraining,:}(e,:) = [c Mtraining{iFold,iKolomFold}(c,1) Mtraining03BestSplit_1{iFold,iKolomFold}(1,2) Mtraining09BestSplit_2A{iFold,iKolomFold}(1,2) Mtraining09BestSplit_2B{iFold,iKolomFold}(1,2) Mtraining{iFold,iKolomFold}(c,2)]; 
+                        Mtraining12RedudansiNonKelas{iFold,iKolomFoldCek}{iBarisTraining,:}(e,:) = [c Mtraining{iFold,iKolomFoldCek}(c,1) Mtraining03BestSplit_1{iFold,iKolomFoldCek}(1,2) Mtraining09BestSplit_2A{iFold,iKolomFold}(1,2) Mtraining09BestSplit_2B{iFold,iKolomFold}(1,2) Mtraining{iFold,iKolomFold}(c,2)]; 
                         e = e + 1;                                                
-                    end
-                    
-                end                                     
+                    end                    
+                end                  
             end
         end
-        
-        
-                      
-% %         % -------------------
-% %         % Coba-coba duplikasi
-% %         % -------------------
-% %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+1 , : ) = Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1}) , : );
-% %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+2 , : ) = Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1}) , : );
-% %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+3 , : ) = Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1}) , : );
-% %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+1 , 24 ) = 1;
-% %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+2 , 24 ) = 0;
-% %         Mtraining05UniqueBiner_2{iFold,1}( length(Mtraining05UniqueBiner_2{iFold,1})+3 , 24 ) = 1;             
-%                 
-%         % -----------------------------------------------------------
-%         % Ngambil perbandingan jumlah T dan F dari data yang redundan
-%         % -----------------------------------------------------------
-% %         counter = 0;            
-% %         for iKolomKelas = 1 : size(CM1Unique,2)-1 % 21
-% %             for iBarisKelas = 1 : length(Mtraining05UniqueBiner_2{iFold,1}) % Data Unique biner                                                            
-% %                 for iBarisCari = 1 : length(Mtraining04Biner_ALL{iFold,1}) % Data biner                                                                                                
-% %                     if Mtraining05UniqueBiner_2{iFold,iKolomKelas}(iBarisKelas,:) == Mtraining04Biner_ALL{iFold,iKolomKelas}(iBarisCari,:) % cek tanpa kelas                                                                                                    
-% %                         counter = counter + 1;                                                       
-% %                         hasilDuplikasi{iFold,1}(counter,:) = [iFold iBarisKelas iBarisCari];    
-% %                         %Mtraining05UniqueBiner_2{iFold,1}(iBarisCari,:)
-% %                     end                                             
-% %                 end
-% %             end
-% %         end
-            
-
-        
-        
+             
     %--- 
     else
 %         for iKolomReady = 1 : size(CM1Unique,2) % 22
@@ -613,7 +581,7 @@ clear Mtraining02UrutSplit_1;
 
 clear dataBestSplit iBarisTrain2A iKolomTrain;
 
-clear dataHEX;
+clear dataHEX iKolomFoldCek;
 
 clear dataTrainingA panjangSplit2A panjangTraining2A;
 clear dataTrainingB panjangSplit2B panjangTraining2B;
